@@ -10,14 +10,16 @@ export const HelpDialog: Component<HelpDialogProps> = (props) => {
   const theme = useTheme();
 
   const shortcuts = [
-    { key: "Tab", desc: "Switch panels (Sidebar / Reader)" },
-    { key: "↑/↓ or j/k", desc: "Navigate surahs or verses" },
+    { key: "Tab", desc: "Cycle focus (Sidebar → Arabic → Translation → Translit)" },
+    { key: "↑/↓ j/k", desc: "Navigate surahs or verses" },
     { key: "Enter", desc: "Select surah (in Sidebar)" },
     { key: "b", desc: "Toggle bookmark (in Reader)" },
-    { key: "a", desc: "Toggle Arabic" },
-    { key: "t", desc: "Toggle Translation" },
-    { key: "r", desc: "Toggle Transliteration" },
+    { key: "a", desc: "Toggle Arabic pane" },
+    { key: "t", desc: "Toggle Translation pane" },
+    { key: "r", desc: "Toggle Transliteration pane" },
     { key: "l", desc: "Cycle Language" },
+    { key: "s", desc: "Toggle Sidebar" },
+    { key: "+/-", desc: "Increase/decrease verse spacing" },
     { key: "/", desc: "Search verses" },
     { key: "?", desc: "Show/hide this help dialog" },
     { key: "ESC", desc: "Dismiss dialog / Clear search" },
@@ -28,19 +30,22 @@ export const HelpDialog: Component<HelpDialogProps> = (props) => {
     <Show when={props.visible}>
       <box
         position="absolute"
-        top="15%"
-        left="20%"
-        width="60%"
-        height="70%"
-        borderStyle="double"
-        borderColor={theme.colors.primary}
+        top="10%"
+        left="15%"
+        width="70%"
+        height="80%"
+        borderStyle="heavy"
+        borderColor={theme.colors.header}
         flexDirection="column"
         padding={1}
         zIndex={100}
+        backgroundColor={theme.colors.background}
+        title=" ◆ Help "
+        titleAlignment="center"
       >
         <box justifyContent="center" marginBottom={1}>
           <text color={theme.colors.highlight} bold>
-            {" quran.sh - Keyboard Shortcuts "}
+            {"━━━ quran.sh Keyboard Shortcuts ━━━"}
           </text>
         </box>
 
@@ -51,7 +56,7 @@ export const HelpDialog: Component<HelpDialogProps> = (props) => {
                 {s.key}
               </text>
               <text color={theme.colors.text}>
-                {": "}{s.desc}
+                {s.desc}
               </text>
             </box>
           ))}
@@ -59,7 +64,7 @@ export const HelpDialog: Component<HelpDialogProps> = (props) => {
 
         <box justifyContent="center" marginTop={1}>
           <text color={theme.colors.muted}>
-            {"Press ESC to close this dialog"}
+            {"Press ESC or ? to close"}
           </text>
         </box>
       </box>

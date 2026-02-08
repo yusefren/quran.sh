@@ -15,10 +15,11 @@ import * as readline from "node:readline";
 
 export { useTheme };
 
-// --- App Component ---
+export type FocusablePane = "sidebar" | "arabic" | "translation" | "transliteration";
+
 const App: Component = () => {
   const [selectedSurahId, setSelectedSurahId] = createSignal(1);
-  const [focusedPanel, setFocusedPanel] = createSignal<"sidebar" | "reader">("sidebar");
+  const [focusedPanel, setFocusedPanel] = createSignal<FocusablePane>("sidebar");
   const [currentVerseId, setCurrentVerseId] = createSignal(1);
   const [bookmarkedAyahs, setBookmarkedAyahs] = createSignal<Set<number>>(new Set());
   const [isSearchMode, setIsSearchMode] = createSignal(false);
@@ -26,14 +27,14 @@ const App: Component = () => {
   const [searchResults, setSearchResults] = createSignal<VerseRef[]>([]);
   const [searchQuery, setSearchQuery] = createSignal("");
   const [showHelp, setShowHelp] = createSignal(false);
-  
-  // View settings
+  const [showSidebar, setShowSidebar] = createSignal(true);
+  const [verseSpacing, setVerseSpacing] = createSignal(1);
+
   const [showArabic, setShowArabic] = createSignal(true);
   const [showTranslation, setShowTranslation] = createSignal(true);
   const [showTransliteration, setShowTransliteration] = createSignal(false);
   const [language, setLanguage] = createSignal("en");
 
-  /** Refresh the bookmarked ayahs set for the current surah from the DB */
   const refreshBookmarks = () => {
     try {
       setBookmarkedAyahs(getBookmarkedAyahs(selectedSurahId()));
@@ -42,8 +43,22 @@ const App: Component = () => {
     }
   };
 
+  const isReaderPane = (p: FocusablePane) => p === "arabic" || p === "translation" || p === "transliteration";
+
+  const cycleFocus = () => {
+    const panes: FocusablePane[] = [];
+    if (showSidebar()) panes.push("sidebar");
+    panes.push("arabic");
+    if (showTranslation()) panes.push("translation");
+    if (showTransliteration()) panes.push("transliteration");
+
+    const current = focusedPanel();
+    const idx = panes.indexOf(current);
+    const next = panes[(idx + 1) % panes.length];
+    setFocusedPanel(next);
+  };
+
   onMount(() => {
-    // Load initial bookmarks
     refreshBookmarks();
 
     try {
@@ -56,7 +71,6 @@ const App: Component = () => {
     }
 
     const onKeyPress = (str: string, key: any) => {
-      // --- Help dialog handling ---
       if (showHelp()) {
         if (key && (key.name === 'escape' || key.name === 'q' || str === '?')) {
           setShowHelp(false);
@@ -64,10 +78,8 @@ const App: Component = () => {
         return;
       }
 
-      // --- Search mode input handling ---
       if (isSearchMode()) {
         if (key && key.name === 'escape') {
-          // ESC exits search mode and clears results
           setIsSearchMode(false);
           setSearchInput("");
           setSearchResults([]);
@@ -75,7 +87,6 @@ const App: Component = () => {
           return;
         }
         if (key && key.name === 'return') {
-          // Enter executes search
           const query = searchInput();
           if (query.trim().length > 0) {
             const results = search(query);
@@ -89,7 +100,6 @@ const App: Component = () => {
           setSearchInput(prev => prev.slice(0, -1));
           return;
         }
-        // Append printable characters to search input
         if (str && str.length === 1 && !key?.ctrl && !key?.meta) {
           setSearchInput(prev => prev + str);
           return;
@@ -97,7 +107,6 @@ const App: Component = () => {
         return;
       }
 
-      // --- Normal mode key handling ---
       if (key && key.name === 'q') {
         process.exit(0);
       }
@@ -107,7 +116,6 @@ const App: Component = () => {
         return;
       }
 
-      // --- View Toggles ---
       if (str === 'a') {
         setShowArabic(prev => !prev);
         return;
@@ -129,19 +137,39 @@ const App: Component = () => {
         return;
       }
 
-      if (key && key.name === 'tab') {
-        setFocusedPanel(prev => prev === 'sidebar' ? 'reader' : 'sidebar');
-      }
-
-      // `/` opens search mode
-      if (str === '/') {
-        setIsSearchMode(true);
-        setSearchInput("");
-        setFocusedPanel("reader");
+      if (str === 's') {
+        const wasVisible = showSidebar();
+        setShowSidebar(prev => !prev);
+        if (wasVisible && focusedPanel() === "sidebar") {
+          setFocusedPanel("arabic");
+        }
+        if (!wasVisible) {
+          setFocusedPanel("sidebar");
+        }
         return;
       }
 
-      // ESC in normal mode clears search results (return to surah view)
+      if (str === '+' || str === '=') {
+        setVerseSpacing(prev => Math.min(prev + 1, 5));
+        return;
+      }
+      if (str === '-') {
+        setVerseSpacing(prev => Math.max(prev - 1, 0));
+        return;
+      }
+
+      if (key && key.name === 'tab') {
+        cycleFocus();
+        return;
+      }
+
+      if (str === '/') {
+        setIsSearchMode(true);
+        setSearchInput("");
+        setFocusedPanel("arabic");
+        return;
+      }
+
       if (key && key.name === 'escape') {
         if (searchResults().length > 0) {
           setSearchResults([]);
@@ -150,8 +178,7 @@ const App: Component = () => {
         return;
       }
 
-      // Reader-specific keys (only when reader panel is focused)
-      if (focusedPanel() === 'reader') {
+      if (isReaderPane(focusedPanel())) {
         if (str === 'j' || (key && key.name === 'down')) {
           const surah = getSurah(selectedSurahId());
           if (surah && currentVerseId() < surah.totalVerses) {
@@ -188,17 +215,18 @@ const App: Component = () => {
     <ThemeProvider>
       <RouteProvider>
         <Layout
+          showSidebar={showSidebar()}
+          sidebarFocused={focusedPanel() === "sidebar"}
           sidebar={
             <box flexDirection="column" height="100%">
               <box height="25%">
                 <StreakChart />
               </box>
               <box height="75%">
-                <SurahList 
+                <SurahList
                   onSelect={(id) => {
                     setSelectedSurahId(id);
                     setCurrentVerseId(1);
-                    // Refresh bookmarks for the new surah
                     try {
                       setBookmarkedAyahs(getBookmarkedAyahs(id));
                     } catch {
@@ -212,9 +240,9 @@ const App: Component = () => {
             </box>
           }
         >
-          <Reader 
-            surahId={selectedSurahId()} 
-            focused={focusedPanel() === "reader"}
+          <Reader
+            surahId={selectedSurahId()}
+            focusedPane={focusedPanel()}
             currentVerseId={currentVerseId()}
             bookmarkedAyahs={bookmarkedAyahs()}
             searchResults={searchResults()}
@@ -225,6 +253,7 @@ const App: Component = () => {
             showTranslation={showTranslation()}
             showTransliteration={showTransliteration()}
             language={language()}
+            verseSpacing={verseSpacing()}
           />
           <HelpDialog visible={showHelp()} />
         </Layout>

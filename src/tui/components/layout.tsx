@@ -1,28 +1,43 @@
 /** @jsxImportSource @opentui/solid */
-import { Component, JSX } from "solid-js";
+import { type Component, type JSX, Show } from "solid-js";
 import { SurahList } from "./surah-list";
 import { useRoute } from "../router";
 import { useTheme } from "../app";
 
-export const Layout: Component<{ sidebar?: JSX.Element; children?: JSX.Element }> = (props) => {
+export interface LayoutProps {
+  sidebar?: JSX.Element;
+  children?: JSX.Element;
+  showSidebar?: boolean;
+  sidebarFocused?: boolean;
+}
+
+export const Layout: Component<LayoutProps> = (props) => {
   const theme = useTheme();
   const { navigate } = useRoute();
+  const sidebarVisible = () => props.showSidebar ?? true;
+  const sidebarFocused = () => props.sidebarFocused ?? false;
 
   return (
     <box flexDirection="row" width="100%" height="100%">
-      {/* Sidebar - 30% width */}
-      <box width="30%" borderStyle="single" borderColor={theme.colors.secondary}>
-        <text bold color={theme.colors.secondary}>
-          Sidebar
-        </text>
-        {props.sidebar || <SurahList onSelect={(id) => navigate(`/surah/${id}`)} />}
-      </box>
+      <Show when={sidebarVisible()}>
+        <box
+          width="30%"
+          overflow="hidden"
+          borderStyle={sidebarFocused() ? "heavy" : "rounded"}
+          borderColor={sidebarFocused() ? theme.colors.borderFocused : theme.colors.border}
+          focusedBorderColor={theme.colors.borderFocused}
+          title={sidebarFocused() ? " ◆ Surahs " : " Surahs "}
+          titleAlignment="left"
+        >
+          {props.sidebar || <SurahList onSelect={(id) => navigate(`/surah/${id}`)} />}
+        </box>
+      </Show>
 
-      {/* Main Content - 70% width */}
-      <box width="70%" borderStyle="single" borderColor={theme.colors.border} padding={1}>
-        <text bold color={theme.colors.border}>
-          Main Content
-        </text>
+      <box
+        width={sidebarVisible() ? "70%" : "100%"}
+        overflow="hidden"
+        flexDirection="column"
+      >
         {props.children}
       </box>
     </box>

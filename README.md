@@ -7,13 +7,17 @@
 
 ## Features
 
-- ✅ **Offline-First**: All data bundled, works without internet
-- ✅ **Translation-First**: English translations for maximum readability
-- ✅ **Fast CLI**: Quick verse lookup (`quran read 2:255`)
-- ✅ **Beautiful TUI**: Immersive 2-panel reader with vim-style navigation
-- ✅ **Progress Tracking**: Reading logs and streak tracking
-- ✅ **Bookmarks**: Mark and revisit favorite verses
-- ✅ **Search**: Full-text search across all translations
+- **Offline-First**: All data bundled, works without internet
+- **Fast CLI**: Quick verse lookup (`quran read 2:255`)
+- **Multi-Pane TUI**: Arabic top, Translation + Transliteration split below
+- **Toggleable Sidebar**: Press `s` to show/hide the surah list
+- **Rich Colors**: Gold Arabic, teal transliteration, green accents
+- **Focus Indicators**: Heavy borders + diamond icon on focused pane
+- **Verse Spacing**: `+`/`-` to adjust spacing between verses
+- **Progress Tracking**: Reading logs and streak tracking
+- **Bookmarks**: Mark and revisit favorite verses
+- **Search**: Full-text search across all translations
+- **Multi-Language**: Cycle through translation languages
 
 ## Installation
 
@@ -56,22 +60,46 @@ quran
 ```
 
 **Keyboard Shortcuts:**
-- `Tab`: Switch between sidebar and reader
-- `↑/↓` or `j/k`: Navigate
-- `Enter`: Select surah
-- `b`: Toggle bookmark on current verse
-- `/`: Search
-- `a`: Toggle Arabic text
-- `t`: Toggle translation
-- `r`: Toggle transliteration
-- `l`: Cycle translation language
-- `?`: Show help
-- `q`: Quit
+
+| Key | Action |
+|-----|--------|
+| `Tab` | Cycle focus: Sidebar → Arabic → Translation → Transliteration |
+| `↑/↓` or `j/k` | Navigate surahs or verses |
+| `Enter` | Select surah (in sidebar) |
+| `b` | Toggle bookmark on current verse |
+| `a` | Toggle Arabic pane |
+| `t` | Toggle Translation pane |
+| `r` | Toggle Transliteration pane |
+| `l` | Cycle translation language |
+| `s` | Toggle sidebar |
+| `+`/`-` | Increase/decrease verse spacing |
+| `/` | Search verses |
+| `?` | Show/hide help dialog |
+| `ESC` | Dismiss dialog / Clear search |
+| `q` | Quit |
 
 ## Data Source
 
 - Translations from [quran-json](https://github.com/risan/quran-json)
 - 114 surahs, 6236 verses
+
+## Recording Demos
+
+Demo recording scripts are in `demos/`. To record a TUI demo:
+
+```bash
+# 1. Start a tmux session
+tmux new-session -d -s demo -x 120 -y 35
+
+# 2. Start terminalizer inside it
+tmux send-keys -t demo 'terminalizer record --config demos/tui-demo.yml demos/tui-full -k' Enter
+
+# 3. Run the keystroke automation (in another terminal)
+bash demos/send-keys.sh
+
+# 4. Render to GIF
+terminalizer render demos/tui-full
+```
 
 ## Development
 

@@ -82,7 +82,7 @@ export const SurahList: Component<SurahListProps> = (props) => {
       style={{
         selectedColor: theme.colors.highlight,
         selectedBold: true,
-        borderColor: theme.colors.border,
+        borderColor: theme.colors.primary,
       }}
     />
   );
