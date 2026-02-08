@@ -153,3 +153,6 @@
 ### Gotchas
 - Unused import: initially imported `getSurah` in log.ts but it's not needed there (surah resolution is in index.ts)
 - `Surah` type import kept as `import type` — only needed for the function signature, not runtime
+- OpenTUI Layout: Used <box flexDirection="row"> with width="30%" and width="70%" for 2-panel layout. Yoga layout supports percentage strings in OpenTUI.
+- Solid Context: Implemented minimal RouteProvider and ThemeProvider using createContext and createSignal.
+- Testing: testRender from @opentui/solid works well with bun test. Captured output shows borders correctly for nested boxes.

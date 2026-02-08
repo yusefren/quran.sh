@@ -155,7 +155,7 @@ Steps:
 
 ### Phase 2: Basic TUI (2-Panel)
 
-- [ ] 6. **TUI Layout & Router**
+- [x] 6. **TUI Layout & Router**
   **What to do**:
   - Create `src/tui/app.tsx` with `RouteProvider` and `ThemeProvider`
   - Create `src/tui/components/layout.tsx`: 2-panel Flexbox (`BoxRenderable`)
