@@ -24,11 +24,11 @@ describe("Reader", () => {
     expect(output).toContain("[1:1]");
     expect(output).toContain("In the name of Allah");
     
-    // Check for verse [1:4] (visible in initial view)
-    expect(output).toContain("[1:4]");
+    // Check for verse [1:3] (visible in initial view with Arabic enabled)
+    expect(output).toContain("[1:3]");
     
     // Scroll down to see verse 7
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 20; i++) {
       mockInput.pressArrow("down");
     }
     await new Promise(r => setTimeout(r, 50));

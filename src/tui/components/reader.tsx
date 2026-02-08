@@ -19,11 +19,19 @@ export interface ReaderProps {
   isSearchMode?: boolean;
   /** Current search input text (while typing) */
   searchInput?: string;
+  /** Whether to show the Arabic text */
+  showArabic?: boolean;
+  /** Whether to show the translation text */
+  showTranslation?: boolean;
+  /** Whether to show the transliteration text */
+  showTransliteration?: boolean;
+  /** The language code for translation (e.g. "en", "fr") */
+  language?: string;
 }
 
 export const Reader: Component<ReaderProps> = (props) => {
   const theme = useTheme();
-  const surah = createMemo(() => getSurah(props.surahId));
+  const surah = createMemo(() => getSurah(props.surahId, props.language));
   const hasSearchResults = () =>
     (props.searchResults && props.searchResults.length > 0) || false;
 
@@ -98,12 +106,34 @@ export const Reader: Component<ReaderProps> = (props) => {
               const marker = isCurrent ? ">" : " ";
               const bookmark = isBookmarked ? " *" : "";
 
+              // Defaults: Arabic and Translation on, Transliteration off
+              const showArabic = props.showArabic ?? true;
+              const showTranslation = props.showTranslation ?? true;
+              const showTransliteration = props.showTransliteration ?? false;
+
               return (
                 <box flexDirection="column" paddingBottom={1} key={v.id}>
                   <text color={isCurrent ? theme.colors.secondary : theme.colors.highlight} bold>
                     {marker} [{surah()!.id}:{v.id}]{bookmark}
                   </text>
-                  <text color={theme.colors.text}>{v.translation}</text>
+                  
+                  {showArabic && (
+                    <text bold color={theme.colors.text}>
+                      {v.text}
+                    </text>
+                  )}
+
+                  {showTransliteration && v.transliteration && (
+                    <text color={theme.colors.secondary} italic>
+                      {v.transliteration}
+                    </text>
+                  )}
+
+                  {showTranslation && (
+                    <text color={theme.colors.text}>
+                      {v.translation}
+                    </text>
+                  )}
                 </box>
               );
             })}

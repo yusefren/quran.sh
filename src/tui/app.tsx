@@ -8,7 +8,7 @@ import { StreakChart } from "./components/streak-chart";
 import { Reader } from "./components/reader";
 import { HelpDialog } from "./components/help-dialog";
 import { toggleBookmark, getBookmarkedAyahs } from "../data/bookmarks";
-import { getSurah, search } from "../data/quran";
+import { getSurah, search, LANGUAGES } from "../data/quran";
 import type { VerseRef } from "../data/quran";
 import { ThemeProvider, useTheme } from "./theme";
 import * as readline from "node:readline";
@@ -26,6 +26,12 @@ const App: Component = () => {
   const [searchResults, setSearchResults] = createSignal<VerseRef[]>([]);
   const [searchQuery, setSearchQuery] = createSignal("");
   const [showHelp, setShowHelp] = createSignal(false);
+  
+  // View settings
+  const [showArabic, setShowArabic] = createSignal(true);
+  const [showTranslation, setShowTranslation] = createSignal(true);
+  const [showTransliteration, setShowTransliteration] = createSignal(false);
+  const [language, setLanguage] = createSignal("en");
 
   /** Refresh the bookmarked ayahs set for the current surah from the DB */
   const refreshBookmarks = () => {
@@ -98,6 +104,28 @@ const App: Component = () => {
 
       if (str === '?') {
         setShowHelp(true);
+        return;
+      }
+
+      // --- View Toggles ---
+      if (str === 'a') {
+        setShowArabic(prev => !prev);
+        return;
+      }
+      if (str === 't') {
+        setShowTranslation(prev => !prev);
+        return;
+      }
+      if (str === 'r') {
+        setShowTransliteration(prev => !prev);
+        return;
+      }
+      if (str === 'l') {
+        const idx = LANGUAGES.indexOf(language() as any);
+        if (idx !== -1) {
+          const next = LANGUAGES[(idx + 1) % LANGUAGES.length];
+          setLanguage(next);
+        }
         return;
       }
 
@@ -193,6 +221,10 @@ const App: Component = () => {
             searchQuery={searchQuery()}
             isSearchMode={isSearchMode()}
             searchInput={searchInput()}
+            showArabic={showArabic()}
+            showTranslation={showTranslation()}
+            showTransliteration={showTransliteration()}
+            language={language()}
           />
           <HelpDialog visible={showHelp()} />
         </Layout>

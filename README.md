@@ -61,6 +61,10 @@ quran
 - `Enter`: Select surah
 - `b`: Toggle bookmark on current verse
 - `/`: Search
+- `a`: Toggle Arabic text
+- `t`: Toggle translation
+- `r`: Toggle transliteration
+- `l`: Cycle translation language
 - `?`: Show help
 - `q`: Quit
 
