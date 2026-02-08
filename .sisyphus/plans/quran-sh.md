@@ -185,7 +185,7 @@ Steps:
 
 ### Phase 3: Features & Polish
 
-- [ ] 10. **Feature: Bookmarks**
+- [x] 10. **Feature: Bookmarks**
   **What to do**:
   - TUI: Press `b` to toggle bookmark on current verse
   - DB: Persist to `bookmarks` table

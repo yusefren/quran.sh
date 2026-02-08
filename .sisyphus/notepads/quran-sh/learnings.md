@@ -196,3 +196,35 @@
   - Used `onSelect` callback in `SurahList` to update parent state.
 - **TUI Focus**: Explicitly managing focus state allows better control than relying on implicit focus traversal, especially for specific shortcuts like Tab.
 
+
+## Task 10: Bookmarks Feature (2026-02-08)
+
+### Bookmark Data Layer (`src/data/bookmarks.ts`)
+- Follows same pattern as `log.ts`: open DB → query → close in `finally`
+- `INSERT OR IGNORE` for `addBookmark()` respects UNIQUE(surah, ayah) — silently skips duplicates
+- `toggleBookmark()` composes `getBookmark()` + `addBookmark()`/`removeBookmark()` — no raw SQL needed
+- `getBookmarkedAyahs(surahId)` returns `Set<number>` for O(1) lookup in render loop
+- Each function opens/closes its own DB connection (consistent with `log.ts` pattern)
+
+### Current Verse Tracking in App
+- Added `currentVerseId` signal to App component (1-based, resets to 1 on surah change)
+- `j`/`k` and arrow keys (when reader focused) navigate verse selection
+- Bounds checking: `currentVerseId > 1` for up, `currentVerseId < surah.totalVerses` for down
+- Current verse shown with `>` prefix and cyan color vs yellow for non-current
+
+### Bookmark Toggle via Keyboard
+- `b` key in reader panel toggles bookmark for `selectedSurahId:currentVerseId`
+- After toggle, calls `refreshBookmarks()` to update `bookmarkedAyahs` signal
+- `bookmarkedAyahs` Set passed as prop to Reader for `*` indicator rendering
+- Wrapped DB calls in try/catch for environments where DB is unavailable (e.g. test render)
+
+### Reader Component Changes
+- New props: `currentVerseId` (number), `bookmarkedAyahs` (Set<number>)
+- Verse label format: `{marker} [{surahId}:{verseId}]{bookmark}` where marker is `>` or ` ` and bookmark is ` *` or ``
+- Props are optional with sensible defaults (currentVerseId defaults to 1, bookmarkedAyahs defaults to empty check)
+
+### Testing Bookmarks
+- **GOTCHA**: WAL journaling means file deletion doesn't fully clean the DB. Tests must `DELETE FROM bookmarks` instead of `unlinkSync(db_path)`.
+- Set `XDG_DATA_HOME` env var before importing modules to control DB path in tests
+- 17 bookmark tests, 46 expect() calls
+- Covers: add, remove, toggle (round-trip), getAll, getBookmarkedAyahs (per-surah filtering), duplicate handling, shapes
