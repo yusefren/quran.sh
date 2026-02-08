@@ -13,6 +13,8 @@
 import { getSurah, getVerse, TOTAL_SURAHS } from "./data/quran.ts";
 import type { Surah, VerseRef } from "./data/quran.ts";
 import { logVerse, logSurah } from "./data/log.ts";
+import { getReadingStats } from "./data/streaks.ts";
+import { getReadingStats } from "./data/streaks.ts";
 
 // ---------------------------------------------------------------------------
 // Output formatting
@@ -117,6 +119,32 @@ function handleLog(ref: string): { ok: boolean; output: string } {
 }
 
 // ---------------------------------------------------------------------------
+// Streak command
+// ---------------------------------------------------------------------------
+
+function handleStreak(): void {
+  const stats = getReadingStats();
+  console.log("📖 Reading Streak");
+  console.log("──────────────────");
+  console.log(`Current Streak: ${stats.currentStreak} days`);
+  console.log(`Longest Streak: ${stats.longestStreak} days`);
+  console.log(`Total Reading Days: ${stats.totalDays} days`);
+}
+
+// ---------------------------------------------------------------------------
+// Streak command
+// ---------------------------------------------------------------------------
+
+function handleStreak(): void {
+  const stats = getReadingStats();
+  console.log("📖 Reading Streak");
+  console.log("──────────────────");
+  console.log(`Current Streak: ${stats.currentStreak} days`);
+  console.log(`Longest Streak: ${stats.longestStreak} days`);
+  console.log(`Total Reading Days: ${stats.totalDays} days`);
+}
+
+// ---------------------------------------------------------------------------
 // CLI router
 // ---------------------------------------------------------------------------
 
@@ -124,8 +152,9 @@ function showUsage(): void {
   console.log(`quran.sh — Read the Quran from your terminal
 
 Usage:
-  quran.sh read <ref>    Read a surah or verse
-  quran.sh log  <ref>    Log a surah or verse as read
+  quran.sh read   <ref>  Read a surah or verse
+  quran.sh log    <ref>  Log a surah or verse as read
+  quran.sh streak        Show reading stats and streaks
 
 Reference formats:
   1              Full surah by number (1-${TOTAL_SURAHS})
@@ -138,7 +167,8 @@ Examples:
   quran.sh read 2:255      Ayat al-Kursi
   quran.sh read al-fatihah Al-Fatihah by name
   quran.sh log  1:1        Log verse 1:1 as read
-  quran.sh log  1          Log all verses in Surah 1`);
+  quran.sh log  1          Log all verses in Surah 1
+  quran.sh streak          Show current streak`);
 }
 
 function main(): void {
@@ -147,6 +177,11 @@ function main(): void {
 
   if (!command || command === "--help" || command === "-h") {
     showUsage();
+    process.exit(0);
+  }
+
+  if (command === "streak") {
+    handleStreak();
     process.exit(0);
   }
 

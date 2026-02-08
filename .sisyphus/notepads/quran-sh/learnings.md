@@ -228,3 +228,7 @@
 - Set `XDG_DATA_HOME` env var before importing modules to control DB path in tests
 - 17 bookmark tests, 46 expect() calls
 - Covers: add, remove, toggle (round-trip), getAll, getBookmarkedAyahs (per-surah filtering), duplicate handling, shapes
+- Streak calculation logic: straightforward date difference check on sorted unique dates (YYYY-MM-DD).
+- SQLite date functions: used strftime('%Y-%m-%d', read_at) to extract date part.
+- TUI components: built using @opentui/solid, leveraging intrinsic elements like <box> and <text>.
+- CLI structure: simple argument parsing in src/index.ts, dispatching to handler functions.

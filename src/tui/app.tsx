@@ -3,6 +3,7 @@ import { createContext, useContext, createSignal, onMount, onCleanup, JSX, Compo
 import { Layout } from "./components/layout";
 import { RouteProvider } from "./router";
 import { SurahList } from "./components/surah-list";
+import { StreakChart } from "./components/streak-chart";
 import { Reader } from "./components/reader";
 import { toggleBookmark, getBookmarkedAyahs } from "../data/bookmarks";
 import { getSurah } from "../data/quran";
@@ -120,20 +121,27 @@ const App: Component = () => {
       <RouteProvider>
         <Layout
           sidebar={
-            <SurahList 
-              onSelect={(id) => {
-                setSelectedSurahId(id);
-                setCurrentVerseId(1);
-                // Refresh bookmarks for the new surah
-                try {
-                  setBookmarkedAyahs(getBookmarkedAyahs(id));
-                } catch {
-                  // DB may not be available
-                }
-              }}
-              initialSelectedId={selectedSurahId()}
-              focused={focusedPanel() === "sidebar"}
-            />
+            <box flexDirection="column" height="100%">
+              <box height="25%">
+                <StreakChart />
+              </box>
+              <box height="75%">
+                <SurahList 
+                  onSelect={(id) => {
+                    setSelectedSurahId(id);
+                    setCurrentVerseId(1);
+                    // Refresh bookmarks for the new surah
+                    try {
+                      setBookmarkedAyahs(getBookmarkedAyahs(id));
+                    } catch {
+                      // DB may not be available
+                    }
+                  }}
+                  initialSelectedId={selectedSurahId()}
+                  focused={focusedPanel() === "sidebar"}
+                />
+              </box>
+            </box>
           }
         >
           <Reader 
