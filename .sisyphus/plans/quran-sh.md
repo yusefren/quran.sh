@@ -44,11 +44,11 @@ Build a robust, offline-first Quran reader that works in any terminal (translati
 - `~/.local/share/quran.sh/quran.db` (User database)
 
 ### Definition of Done
-- [ ] `quran read 1` outputs Al-Fatihah translation
-- [ ] `quran` launches TUI with 2-panel layout
-- [ ] TUI navigation works (Arrow keys/Vim keys)
-- [ ] Reading progress saves to SQLite
-- [ ] `bun test` passes all logic and component tests
+- [x] `quran read 1` outputs Al-Fatihah translation
+- [x] `quran` launches TUI with 2-panel layout
+- [x] TUI navigation works (Arrow keys/Vim keys)
+- [x] Reading progress saves to SQLite
+- [x] `bun test` passes all logic and component tests
 
 ### Must Have
 - Offline capability (0 internet required after install)
