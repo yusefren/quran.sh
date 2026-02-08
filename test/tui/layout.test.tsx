@@ -14,6 +14,7 @@ describe("TUI Layout", () => {
 
     expect(output).toContain("Sidebar");
     expect(output).toContain("Main Content");
-    expect(output).toContain("Current Route: /");
+    // Now shows integrated components instead of placeholder
+    expect(output).toContain("Al-Fatihah");
   });
 });

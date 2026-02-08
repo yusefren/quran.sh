@@ -176,7 +176,7 @@ Steps:
   - Handle scrolling (`Space`, `j`/`k`)
   - Test: Verify content updates on surah change
 
-- [ ] 9. **Navigation System**
+- [x] 9. **Navigation System**
   **What to do**:
   - Implement global focus management (Sidebar <-> Reader)
   - `Tab` to switch panels

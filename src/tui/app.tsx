@@ -1,7 +1,10 @@
 import { render } from "@opentui/solid";
-import { createContext, useContext, createSignal, JSX, Component } from "solid-js";
+import { createContext, useContext, createSignal, onMount, onCleanup, JSX, Component } from "solid-js";
 import { Layout } from "./components/layout";
-import { RouteProvider, useRoute } from "./router";
+import { RouteProvider } from "./router";
+import { SurahList } from "./components/surah-list";
+import { Reader } from "./components/reader";
+import * as readline from "node:readline";
 
 // --- Theme Provider ---
 interface ThemeContextType {
@@ -41,23 +44,55 @@ export const useTheme = () => {
 
 // --- App Component ---
 const App: Component = () => {
+  const [selectedSurahId, setSelectedSurahId] = createSignal(1);
+  const [focusedPanel, setFocusedPanel] = createSignal<"sidebar" | "reader">("sidebar");
+
+  onMount(() => {
+    try {
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(true);
+        readline.emitKeypressEvents(process.stdin);
+      }
+    } catch (e) {
+      // Ignore
+    }
+
+    const onKeyPress = (str: string, key: any) => {
+      if (key && key.name === 'q') {
+        process.exit(0);
+      }
+      if (key && key.name === 'tab') {
+        setFocusedPanel(prev => prev === 'sidebar' ? 'reader' : 'sidebar');
+      }
+    };
+
+    process.stdin.on('keypress', onKeyPress);
+
+    onCleanup(() => {
+      process.stdin.removeListener('keypress', onKeyPress);
+    });
+  });
+
   return (
     <ThemeProvider>
       <RouteProvider>
-        <Layout>
-          <box flexDirection="column">
-            <text>Welcome to Quran TUI</text>
-            <RouteInfo />
-          </box>
+        <Layout
+          sidebar={
+            <SurahList 
+              onSelect={(id) => setSelectedSurahId(id)}
+              initialSelectedId={selectedSurahId()}
+              focused={focusedPanel() === "sidebar"}
+            />
+          }
+        >
+          <Reader 
+            surahId={selectedSurahId()} 
+            focused={focusedPanel() === "reader"}
+          />
         </Layout>
       </RouteProvider>
     </ThemeProvider>
   );
-};
-
-const RouteInfo: Component = () => {
-  const { path } = useRoute();
-  return <text>Current Route: {path()}</text>;
 };
 
 if (import.meta.main) {

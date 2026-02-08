@@ -10,6 +10,7 @@ interface SurahOption {
 export interface SurahListProps {
   onSelect?: (surahId: number) => void;
   initialSelectedId?: number;
+  focused?: boolean;
 }
 
 export const SurahList: Component<SurahListProps> = (props) => {
@@ -74,7 +75,7 @@ export const SurahList: Component<SurahListProps> = (props) => {
       showScrollIndicator={true}
       showDescription={true}
       focusable={true}
-      focused={true}
+      focused={props.focused ?? true}
     />
   );
 };

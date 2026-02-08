@@ -186,3 +186,13 @@
 - `ScrollBox` handles standard arrow keys (Up/Down/PageUp/PageDown).
 - Custom key bindings (like `j`/`k`) require further investigation into OpenTUI event system (e.g. `on:keypress` or `useInput` hook).
 
+
+## Navigation System Implementation
+- **Global Key Handling**: implemented using `process.stdin` in raw mode with `readline.emitKeypressEvents`.
+- **State Management**: Used `createSignal` in `App` component to manage `selectedSurahId` and `focusedPanel`.
+- **Component Integration**:
+  - Decoupled `SurahList` and `Reader` by lifting state to `App`.
+  - Passed `focused` prop to components to visually indicate active panel.
+  - Used `onSelect` callback in `SurahList` to update parent state.
+- **TUI Focus**: Explicitly managing focus state allows better control than relying on implicit focus traversal, especially for specific shortcuts like Tab.
+
