@@ -123,7 +123,7 @@ Steps:
   - Verify: `bun test` passes
   **Reference**: `@opentui/solid` npm docs
 
-- [ ] 2. **Validate Data & Storage Layer**
+- [x] 2. **Validate Data & Storage Layer**
   **What to do**:
   - Install `quran-json`
   - Create `src/data/db.ts`: Setup `bun:sqlite` with WAL mode
