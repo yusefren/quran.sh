@@ -123,3 +123,33 @@
 - `noUncheckedIndexedAccess` means `args[0]` and `args[1]` are `string | undefined` — handled with falsy checks
 - Name lookup is case-insensitive (handled by data layer's `getSurah()`)
 - No separate `src/cli/read.ts` file needed — single-file CLI is clean enough for current scope
+
+## Task 5: CLI `log` Command (2026-02-08)
+
+### Architecture
+- Created `src/data/log.ts` — separate module for log persistence, parallel to `quran.ts` for data access
+- `logVerse(ref)` — validates via `getVerse()`, inserts single row, returns `LogResult`
+- `logSurah(surah)` — accepts `Surah` object (resolved in CLI router), inserts all verses in a transaction
+- Surah resolution (by ID or name) happens in `index.ts` via `getSurah()`, not in log module — cleaner separation
+
+### Database Interaction
+- Each `logVerse`/`logSurah` call opens and closes its own DB connection (`openDatabase()` + `db.close()`)
+- `db.query(sql).run(params...)` for parameterized INSERT — prevents SQL injection
+- `db.transaction(() => { ... })` for batch surah logging — all-or-nothing, much faster than individual inserts
+- UNIQUE(surah, ayah, read_at) constraint: same verse CAN be logged multiple times (different timestamps); only exact millisecond collision would violate — effectively no issue in practice
+
+### Logging Strategy
+- **Individual verses**: Each verse gets its own `reading_log` row, even for surah-level logging
+- Rationale: granular progress tracking — can later query "which verses have I read?" at verse level
+- For `log 1`: inserts 7 rows (one per verse of Al-Fatihah), all within a single transaction
+- `verse_ref` column stores canonical `surah:ayah` notation (e.g. "2:255")
+
+### CLI Router Updates
+- Extended command check: `command !== "read" && command !== "log"` (was just `!== "read"`)
+- `handleLog()` mirrors `handleRead()` structure — same 3-branch ref detection (colon → verse, digits → surah ID, else → name)
+- Usage text updated to show both `read` and `log` commands with examples
+- Error messages in `log` are identical format to `read` — consistency
+
+### Gotchas
+- Unused import: initially imported `getSurah` in log.ts but it's not needed there (surah resolution is in index.ts)
+- `Surah` type import kept as `import type` — only needed for the function signature, not runtime

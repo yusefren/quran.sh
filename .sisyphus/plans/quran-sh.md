@@ -147,7 +147,7 @@ Steps:
   - Output: Plain text translation (no Arabic yet)
   - Verify: `bun run src/index.ts read 1` outputs text
 
-- [ ] 5. **Implement CLI: `quran log`**
+- [x] 5. **Implement CLI: `quran log`**
   **What to do**:
   - Implement `log <ref>` command
   - Insert into `reading_log` table in SQLite

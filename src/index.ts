@@ -12,6 +12,7 @@
  */
 import { getSurah, getVerse, TOTAL_SURAHS } from "./data/quran.ts";
 import type { Surah, VerseRef } from "./data/quran.ts";
+import { logVerse, logSurah } from "./data/log.ts";
 
 // ---------------------------------------------------------------------------
 // Output formatting
@@ -75,6 +76,47 @@ function handleRead(ref: string): { ok: boolean; output: string } {
 }
 
 // ---------------------------------------------------------------------------
+// Log command
+// ---------------------------------------------------------------------------
+
+/**
+ * Handle the `log <ref>` command.
+ * Supports the same reference formats as `read`: surah:verse, surah number, surah name.
+ */
+function handleLog(ref: string): { ok: boolean; output: string } {
+  // Verse reference: contains ":"
+  if (ref.includes(":")) {
+    const result = logVerse(ref);
+    return { ok: result.ok, output: result.message };
+  }
+
+  // Numeric surah ID: all digits
+  if (/^\d+$/.test(ref)) {
+    const id = Number(ref);
+    const surah = getSurah(id);
+    if (!surah) {
+      return {
+        ok: false,
+        output: `Error: Surah ${id} not found. Valid range: 1-${TOTAL_SURAHS}.`,
+      };
+    }
+    const result = logSurah(surah);
+    return { ok: result.ok, output: result.message };
+  }
+
+  // Surah name (transliteration)
+  const surah = getSurah(ref);
+  if (!surah) {
+    return {
+      ok: false,
+      output: `Error: Surah "${ref}" not found. Use transliterated name (e.g. al-fatihah, al-baqarah).`,
+    };
+  }
+  const result = logSurah(surah);
+  return { ok: result.ok, output: result.message };
+}
+
+// ---------------------------------------------------------------------------
 // CLI router
 // ---------------------------------------------------------------------------
 
@@ -83,6 +125,7 @@ function showUsage(): void {
 
 Usage:
   quran.sh read <ref>    Read a surah or verse
+  quran.sh log  <ref>    Log a surah or verse as read
 
 Reference formats:
   1              Full surah by number (1-${TOTAL_SURAHS})
@@ -93,7 +136,9 @@ Examples:
   quran.sh read 1          Al-Fatihah (full surah)
   quran.sh read 1:1        First verse of Al-Fatihah
   quran.sh read 2:255      Ayat al-Kursi
-  quran.sh read al-fatihah Al-Fatihah by name`);
+  quran.sh read al-fatihah Al-Fatihah by name
+  quran.sh log  1:1        Log verse 1:1 as read
+  quran.sh log  1          Log all verses in Surah 1`);
 }
 
 function main(): void {
@@ -105,19 +150,20 @@ function main(): void {
     process.exit(0);
   }
 
-  if (command !== "read") {
+  if (command !== "read" && command !== "log") {
     console.error(`Error: Unknown command "${command}". Run with --help for usage.`);
     process.exit(1);
   }
 
   const ref = args[1];
   if (!ref) {
-    console.error("Error: Missing reference. Usage: quran.sh read <ref>");
-    console.error("  Examples: read 1, read 1:1, read al-fatihah");
+    console.error(`Error: Missing reference. Usage: quran.sh ${command} <ref>`);
+    console.error(`  Examples: ${command} 1, ${command} 1:1, ${command} al-fatihah`);
     process.exit(1);
   }
 
-  const result = handleRead(ref);
+  const handler = command === "read" ? handleRead : handleLog;
+  const result = handler(ref);
   if (result.ok) {
     console.log(result.output);
     process.exit(0);
