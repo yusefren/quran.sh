@@ -94,3 +94,32 @@
 - 1-based verse numbering verified (first verse ID = 1, last verse ID = totalVerses)
 - Edge cases: surah 0, 115, negative, NaN, floats, empty strings, whitespace
 - Search: case-insensitivity, empty/whitespace queries, nonsense queries, known matches
+
+## Task 4: CLI `read` Command (2026-02-08)
+
+### CLI Argument Parsing
+- Used simple `process.argv.slice(2)` — no external dependency needed (no commander/yargs)
+- Pattern: `args[0]` = command, `args[1]` = argument
+- Bun strips its own args automatically; `process.argv[0]` is bun path, `[1]` is script path
+- For a single-command CLI, this is perfectly adequate; consider commander only when subcommand count > 3
+
+### Reference Detection Strategy
+- Three-branch detection in order: (1) contains `:` → verse ref, (2) all digits → surah ID, (3) else → surah name
+- This ordering avoids ambiguity since surah names never contain `:` or consist of only digits
+- Regex `/^\d+$/` for numeric detection is safe and simple
+
+### Output Formatting
+- Full surah: `Surah {id}: {transliteration} ({translation})\n\n{verse translations joined by \n}`
+- Single verse: `[{surah}:{verse}] {translation}`
+- No Arabic text (translation-first strategy per plan)
+
+### Error Handling
+- All error paths exit with code 1, success paths with code 0
+- Errors written to stderr (`console.error`), output to stdout (`console.log`)
+- Three error categories: missing ref, invalid format/not found, unknown command
+- Each error includes helpful suggestion of correct format
+
+### Gotchas
+- `noUncheckedIndexedAccess` means `args[0]` and `args[1]` are `string | undefined` — handled with falsy checks
+- Name lookup is case-insensitive (handled by data layer's `getSurah()`)
+- No separate `src/cli/read.ts` file needed — single-file CLI is clean enough for current scope

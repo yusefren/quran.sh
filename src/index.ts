@@ -1,1 +1,130 @@
-console.log("Hello via Bun!");
+#!/usr/bin/env bun
+/**
+ * quran.sh — CLI entry point.
+ *
+ * Usage:
+ *   quran.sh read <ref>
+ *
+ * Reference formats:
+ *   1            — full surah by number
+ *   1:1          — single verse by surah:verse
+ *   al-fatihah   — full surah by transliterated name
+ */
+import { getSurah, getVerse, TOTAL_SURAHS } from "./data/quran.ts";
+import type { Surah, VerseRef } from "./data/quran.ts";
+
+// ---------------------------------------------------------------------------
+// Output formatting
+// ---------------------------------------------------------------------------
+
+function formatSurah(surah: Surah): string {
+  const header = `Surah ${surah.id}: ${surah.transliteration} (${surah.translation})`;
+  const verses = surah.verses
+    .map((v) => v.translation)
+    .join("\n");
+  return `${header}\n\n${verses}`;
+}
+
+function formatVerse(verse: VerseRef): string {
+  return `[${verse.reference}] ${verse.translation}`;
+}
+
+// ---------------------------------------------------------------------------
+// Reference parsing & dispatch
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect the type of reference and fetch the appropriate data.
+ * Returns formatted output string or an error message.
+ */
+function handleRead(ref: string): { ok: boolean; output: string } {
+  // Verse reference: contains ":"
+  if (ref.includes(":")) {
+    const verse = getVerse(ref);
+    if (!verse) {
+      return {
+        ok: false,
+        output: `Error: Verse "${ref}" not found. Use format "surah:verse" (e.g. 1:1, 2:255).`,
+      };
+    }
+    return { ok: true, output: formatVerse(verse) };
+  }
+
+  // Numeric surah ID: all digits
+  if (/^\d+$/.test(ref)) {
+    const id = Number(ref);
+    const surah = getSurah(id);
+    if (!surah) {
+      return {
+        ok: false,
+        output: `Error: Surah ${id} not found. Valid range: 1-${TOTAL_SURAHS}.`,
+      };
+    }
+    return { ok: true, output: formatSurah(surah) };
+  }
+
+  // Surah name (transliteration)
+  const surah = getSurah(ref);
+  if (!surah) {
+    return {
+      ok: false,
+      output: `Error: Surah "${ref}" not found. Use transliterated name (e.g. al-fatihah, al-baqarah).`,
+    };
+  }
+  return { ok: true, output: formatSurah(surah) };
+}
+
+// ---------------------------------------------------------------------------
+// CLI router
+// ---------------------------------------------------------------------------
+
+function showUsage(): void {
+  console.log(`quran.sh — Read the Quran from your terminal
+
+Usage:
+  quran.sh read <ref>    Read a surah or verse
+
+Reference formats:
+  1              Full surah by number (1-${TOTAL_SURAHS})
+  1:1            Single verse (surah:verse)
+  al-fatihah     Full surah by name
+
+Examples:
+  quran.sh read 1          Al-Fatihah (full surah)
+  quran.sh read 1:1        First verse of Al-Fatihah
+  quran.sh read 2:255      Ayat al-Kursi
+  quran.sh read al-fatihah Al-Fatihah by name`);
+}
+
+function main(): void {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (!command || command === "--help" || command === "-h") {
+    showUsage();
+    process.exit(0);
+  }
+
+  if (command !== "read") {
+    console.error(`Error: Unknown command "${command}". Run with --help for usage.`);
+    process.exit(1);
+  }
+
+  const ref = args[1];
+  if (!ref) {
+    console.error("Error: Missing reference. Usage: quran.sh read <ref>");
+    console.error("  Examples: read 1, read 1:1, read al-fatihah");
+    process.exit(1);
+  }
+
+  const result = handleRead(ref);
+  if (result.ok) {
+    console.log(result.output);
+    process.exit(0);
+  } else {
+    console.error(result.output);
+    process.exit(1);
+  }
+}
+
+main();

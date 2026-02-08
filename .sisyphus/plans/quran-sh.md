@@ -139,7 +139,7 @@ Steps:
   - Tests: Unit tests for data retrieval
   - **Guardrail**: Handle verse numbering (ensure 1-based consistency)
 
-- [ ] 4. **Implement CLI: `quran read`**
+- [x] 4. **Implement CLI: `quran read`**
   **What to do**:
   - Setup CLI router (commander or custom)
   - Implement `read <ref>` command
