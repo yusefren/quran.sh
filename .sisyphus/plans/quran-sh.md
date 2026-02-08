@@ -204,7 +204,7 @@ Steps:
   - TUI: `/` opens search dialog (using `DialogPrompt`)
   - Display results in Reader panel
 
-- [ ] 13. **Final Polish & Release**
+- [x] 13. **Final Polish & Release**
   **What to do**:
   - Help dialog (`?`)
   - Theme support (start with `madinah`)

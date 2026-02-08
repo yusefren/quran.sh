@@ -1,3 +1,4 @@
+/** @jsxImportSource @opentui/solid */
 import { createContext, useContext, createSignal, JSX, Component } from "solid-js";
 
 // --- Route Provider ---

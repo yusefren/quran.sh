@@ -1,7 +1,10 @@
+/** @jsxImportSource @opentui/solid */
 import { Component, For } from "solid-js";
 import { getReadingStats } from "../../data/streaks.ts";
+import { useTheme } from "../app";
 
 export const StreakChart: Component = () => {
+  const theme = useTheme();
   const stats = getReadingStats();
   const { activityGrid } = stats;
 
@@ -25,8 +28,8 @@ export const StreakChart: Component = () => {
   };
 
   return (
-    <box flexDirection="column" borderStyle="round" borderColor="green" padding={1}>
-      <text bold color="cyan">
+    <box flexDirection="column" borderStyle="rounded" borderColor={theme.colors.border} padding={1}>
+      <text bold color={theme.colors.secondary}>
         Reading Activity (Last 28 Days)
       </text>
       

@@ -1,19 +1,13 @@
 #!/usr/bin/env bun
 /**
  * quran.sh — CLI entry point.
- *
- * Usage:
- *   quran.sh read <ref>
- *
- * Reference formats:
- *   1            — full surah by number
- *   1:1          — single verse by surah:verse
- *   al-fatihah   — full surah by transliterated name
  */
 import { getSurah, getVerse, search, TOTAL_SURAHS } from "./data/quran.ts";
 import type { Surah, VerseRef } from "./data/quran.ts";
 import { logVerse, logSurah } from "./data/log.ts";
 import { getReadingStats } from "./data/streaks.ts";
+import { render } from "@opentui/solid";
+import App from "./tui/app.tsx";
 
 // ---------------------------------------------------------------------------
 // Output formatting
@@ -35,12 +29,7 @@ function formatVerse(verse: VerseRef): string {
 // Reference parsing & dispatch
 // ---------------------------------------------------------------------------
 
-/**
- * Detect the type of reference and fetch the appropriate data.
- * Returns formatted output string or an error message.
- */
 function handleRead(ref: string): { ok: boolean; output: string } {
-  // Verse reference: contains ":"
   if (ref.includes(":")) {
     const verse = getVerse(ref);
     if (!verse) {
@@ -52,7 +41,6 @@ function handleRead(ref: string): { ok: boolean; output: string } {
     return { ok: true, output: formatVerse(verse) };
   }
 
-  // Numeric surah ID: all digits
   if (/^\d+$/.test(ref)) {
     const id = Number(ref);
     const surah = getSurah(id);
@@ -65,7 +53,6 @@ function handleRead(ref: string): { ok: boolean; output: string } {
     return { ok: true, output: formatSurah(surah) };
   }
 
-  // Surah name (transliteration)
   const surah = getSurah(ref);
   if (!surah) {
     return {
@@ -76,22 +63,12 @@ function handleRead(ref: string): { ok: boolean; output: string } {
   return { ok: true, output: formatSurah(surah) };
 }
 
-// ---------------------------------------------------------------------------
-// Log command
-// ---------------------------------------------------------------------------
-
-/**
- * Handle the `log <ref>` command.
- * Supports the same reference formats as `read`: surah:verse, surah number, surah name.
- */
 function handleLog(ref: string): { ok: boolean; output: string } {
-  // Verse reference: contains ":"
   if (ref.includes(":")) {
     const result = logVerse(ref);
     return { ok: result.ok, output: result.message };
   }
 
-  // Numeric surah ID: all digits
   if (/^\d+$/.test(ref)) {
     const id = Number(ref);
     const surah = getSurah(id);
@@ -105,7 +82,6 @@ function handleLog(ref: string): { ok: boolean; output: string } {
     return { ok: result.ok, output: result.message };
   }
 
-  // Surah name (transliteration)
   const surah = getSurah(ref);
   if (!surah) {
     return {
@@ -117,10 +93,6 @@ function handleLog(ref: string): { ok: boolean; output: string } {
   return { ok: result.ok, output: result.message };
 }
 
-// ---------------------------------------------------------------------------
-// Streak command
-// ---------------------------------------------------------------------------
-
 function handleStreak(): void {
   const stats = getReadingStats();
   console.log("📖 Reading Streak");
@@ -129,10 +101,6 @@ function handleStreak(): void {
   console.log(`Longest Streak: ${stats.longestStreak} days`);
   console.log(`Total Reading Days: ${stats.totalDays} days`);
 }
-
-// ---------------------------------------------------------------------------
-// Search command
-// ---------------------------------------------------------------------------
 
 function handleSearch(query: string): { ok: boolean; output: string } {
   if (!query || query.trim().length === 0) {
@@ -157,18 +125,18 @@ function handleSearch(query: string): { ok: boolean; output: string } {
   };
 }
 
-// ---------------------------------------------------------------------------
-// CLI router
-// ---------------------------------------------------------------------------
-
 function showUsage(): void {
   console.log(`quran.sh — Read the Quran from your terminal
 
 Usage:
-  quran.sh read   <ref>    Read a surah or verse
-  quran.sh log    <ref>    Log a surah or verse as read
-  quran.sh search <query>  Search verse translations
-  quran.sh streak          Show reading stats and streaks
+  quran.sh [command] [options]
+
+Commands:
+  (none)           Launch interactive TUI reader
+  read   <ref>    Read a surah or verse
+  log    <ref>    Log a surah or verse as read
+  search <query>  Search verse translations
+  streak          Show reading stats and streaks
 
 Reference formats:
   1              Full surah by number (1-${TOTAL_SURAHS})
@@ -176,21 +144,24 @@ Reference formats:
   al-fatihah     Full surah by name
 
 Examples:
-  quran.sh read 1          Al-Fatihah (full surah)
-  quran.sh read 1:1        First verse of Al-Fatihah
-  quran.sh read 2:255      Ayat al-Kursi
-  quran.sh read al-fatihah Al-Fatihah by name
-  quran.sh log  1:1        Log verse 1:1 as read
-  quran.sh log  1          Log all verses in Surah 1
-  quran.sh search merciful Search for "merciful"
-  quran.sh streak          Show current streak`);
+  quran                    Launch TUI
+  quran read 1             Al-Fatihah (full surah)
+  quran read 1:1           First verse of Al-Fatihah
+  quran search merciful    Search for "merciful"
+  quran streak             Show current streak`);
 }
 
-function main(): void {
+async function main() {
   const args = process.argv.slice(2);
   const command = args[0];
 
-  if (!command || command === "--help" || command === "-h") {
+  if (!command) {
+    // Launch TUI
+    render(() => App({}));
+    return;
+  }
+
+  if (command === "--help" || command === "-h") {
     showUsage();
     process.exit(0);
   }
@@ -220,7 +191,6 @@ function main(): void {
   const ref = args[1];
   if (!ref) {
     console.error(`Error: Missing reference. Usage: quran.sh ${command} <ref>`);
-    console.error(`  Examples: ${command} 1, ${command} 1:1, ${command} al-fatihah`);
     process.exit(1);
   }
 

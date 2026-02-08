@@ -1,6 +1,8 @@
+/** @jsxImportSource @opentui/solid */
 import { Component, createMemo } from "solid-js";
 import { getSurah } from "../../data/quran";
 import type { VerseRef } from "../../data/quran";
+import { useTheme } from "../app";
 
 export interface ReaderProps {
   surahId: number;
@@ -20,6 +22,7 @@ export interface ReaderProps {
 }
 
 export const Reader: Component<ReaderProps> = (props) => {
+  const theme = useTheme();
   const surah = createMemo(() => getSurah(props.surahId));
   const hasSearchResults = () =>
     (props.searchResults && props.searchResults.length > 0) || false;
@@ -37,13 +40,13 @@ export const Reader: Component<ReaderProps> = (props) => {
       width="100%"
       height="100%"
       borderStyle="single"
-      borderColor="green"
+      borderColor={theme.colors.border}
       title={panelTitle()}
     >
       {/* Search input bar */}
       {props.isSearchMode && (
         <box height={1} width="100%">
-          <text color="cyan" bold>
+          <text color={theme.colors.secondary} bold>
             {"/"}{props.searchInput ?? ""}{"_"}
           </text>
         </box>
@@ -61,19 +64,19 @@ export const Reader: Component<ReaderProps> = (props) => {
           flexDirection="column"
         >
           <box paddingBottom={1}>
-            <text color="cyan" bold>
+            <text color={theme.colors.secondary} bold>
               {`Found ${props.searchResults!.length} result(s) for "${props.searchQuery}"`}
             </text>
           </box>
           <box paddingBottom={1}>
-            <text color="gray">{"Press ESC to return to surah view"}</text>
+            <text color={theme.colors.muted}>{"Press ESC to return to surah view"}</text>
           </box>
           {props.searchResults!.map((r) => (
             <box flexDirection="column" paddingBottom={1}>
-              <text color="yellow" bold>
+              <text color={theme.colors.highlight} bold>
                 {`  [${r.reference}]`}
               </text>
-              <text>{r.translation}</text>
+              <text color={theme.colors.text}>{r.translation}</text>
             </box>
           ))}
         </scrollbox>
@@ -97,10 +100,10 @@ export const Reader: Component<ReaderProps> = (props) => {
 
               return (
                 <box flexDirection="column" paddingBottom={1} key={v.id}>
-                  <text color={isCurrent ? "cyan" : "yellow"} bold>
+                  <text color={isCurrent ? theme.colors.secondary : theme.colors.highlight} bold>
                     {marker} [{surah()!.id}:{v.id}]{bookmark}
                   </text>
-                  <text>{v.translation}</text>
+                  <text color={theme.colors.text}>{v.translation}</text>
                 </box>
               );
             })}

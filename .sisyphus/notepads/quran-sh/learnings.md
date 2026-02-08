@@ -268,3 +268,32 @@
 ### Bug Fixes During Task
 - Fixed duplicate `handleStreak()` function and duplicate `getReadingStats` import in `src/index.ts` (pre-existing issues from earlier tasks)
 - Added `search` import to index.ts and `search`/`VerseRef` imports to app.tsx
+
+## Task 13: Final Polish & Release (2026-02-08)
+
+### Help Dialog Implementation
+- Implemented `HelpDialog` as a modal overlay using `position="absolute"` and `zIndex={100}`.
+- Added state `showHelp` in `App` component to toggle visibility.
+- Keybinding `?` triggers the dialog, and `ESC`, `q`, or `?` dismisses it when visible.
+- Ensured help dialog is accessible from any focused panel.
+
+### Theme System
+- Defined a `Theme` interface and `madinahTheme` in `src/tui/theme.tsx`.
+- Moved `ThemeProvider` and `useTheme` to the theme file for better organization.
+- Applied theme colors across all TUI components (`App`, `Reader`, `SurahList`, `Layout`, `StreakChart`).
+- Using Islamic-inspired colors (green, cyan, yellow) as the default "madinah" theme.
+
+### Package Configuration
+- Added `bin` field to `package.json` to create a global `quran` command.
+- Ensured `src/index.ts` has `#!/usr/bin/env bun` shebang.
+- Renamed entry point to `.ts` and avoided JSX in it to prevent `jsx-runtime` issues during global execution with Bun.
+- Added `/** @jsxImportSource @opentui/solid */` to all `.tsx` files to ensure Bun uses the correct JSX runtime even when running outside of the project root.
+
+### Documentation
+- Completely rewrote `README.md` with features, installation instructions, CLI usage examples, TUI shortcuts, and development setup.
+- Added badges for npm and license.
+
+### Technical Gotchas
+- **JSX Runtime**: Bun might default to React JSX runtime if not explicitly hinted in `.tsx` files or `tsconfig.json`. Added file-level hints for maximum compatibility.
+- **Global Binaries**: When Bun installs a global binary from a local path, it symlinks to the source file. Changes to the source file are reflected immediately, but renaming the file requires a reinstall.
+- **Solid Components in TS**: Solid components can be called as functions `App({})` in plain `.ts` files to avoid needing JSX transpilation in the entry point.

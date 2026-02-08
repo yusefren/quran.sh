@@ -1,10 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { testRender } from "@opentui/solid";
 import { SurahList } from "../../src/tui/components/surah-list";
+import { ThemeProvider } from "../../src/tui/theme";
 
 describe("SurahList", () => {
   test("renders the list of surahs", async () => {
-    const { captureSpans, renderOnce } = await testRender(() => <SurahList />);
+    const { captureSpans, renderOnce } = await testRender(() => (
+      <ThemeProvider>
+        <SurahList />
+      </ThemeProvider>
+    ));
     await renderOnce();
 
     const frame = captureSpans();
@@ -26,7 +31,9 @@ describe("SurahList", () => {
     };
 
     const { renderer, mockInput, renderOnce } = await testRender(() => (
-      <SurahList onSelect={handleSelect} initialSelectedId={1} />
+      <ThemeProvider>
+        <SurahList onSelect={handleSelect} initialSelectedId={1} />
+      </ThemeProvider>
     ));
     await renderOnce();
 
