@@ -59,3 +59,38 @@
 - Data dir: `~/.local/share/quran.sh/` (respects `XDG_DATA_HOME` env var)
 - DB file: `quran.db` (production) or `test.db` (verification)
 - `dirname()` from `node:path` preferred over `join(path, "..")` for parent dir resolution
+
+## Task 3: Data Access Layer (src/data/quran.ts)
+
+### quran-json data structure (confirmed)
+- `quran-json/dist/quran_en.json`: Single JSON file containing ALL 114 chapters with embedded verses
+- Main export (`dist/chapters/en/index.json`): Same data but chapter metadata only (with CDN links, no embedded verses for individual chapters)
+- Individual chapter files at `dist/chapters/en/{id}.json`: Include `transliteration` field on verses (not present in quran_en.json per-verse transliteration data)
+- Each chapter object: `{ id, name, transliteration, translation, type, total_verses, verses: [...] }`
+- Each verse object: `{ id, text, translation }` — verse `id` is already 1-based in the data
+- `type` is always "meccan" or "medinan"
+
+### Verse reference parsing
+- Colon format "surah:verse" (e.g. "2:255") is the standard reference notation
+- Both surah and verse parts must be valid positive integers
+- Verse IDs in quran-json are already 1-based, so `find()` by ID is safe (no off-by-one)
+- Float values like "1.5:2" must be rejected (use Number.isInteger check)
+
+### Data loading strategy
+- Using `createRequire` from `node:module` for JSON import (works with `verbatimModuleSyntax`)
+- Lazy loading with caching: data loaded once on first access, then cached in module-level variables
+- Built two lookup maps: by ID (number) and by transliteration name (lowercase string)
+- Using `quran_en.json` (monolithic file) rather than per-chapter files — simpler, single I/O
+
+### Gotchas
+- `noUncheckedIndexedAccess` is enabled in tsconfig — all array/map access requires null checks
+- quran-json has no TypeScript types — needed to define RawChapter/RawVerse interfaces manually
+- The `type` field in raw data is `string`, needs casting to `"meccan" | "medinan"` union
+- `quran_en.json` doesn't include verse transliteration; individual chapter files (`dist/chapters/en/{id}.json`) do
+
+### Test coverage highlights
+- 47 tests, 593 expect() calls
+- All 114 surahs verified accessible with correct ID and non-empty verses
+- 1-based verse numbering verified (first verse ID = 1, last verse ID = totalVerses)
+- Edge cases: surah 0, 115, negative, NaN, floats, empty strings, whitespace
+- Search: case-insensitivity, empty/whitespace queries, nonsense queries, known matches

@@ -132,7 +132,7 @@ Steps:
 
 ### Phase 1: Core Data & CLI
 
-- [ ] 3. **Implement Data Access Layer**
+- [x] 3. **Implement Data Access Layer**
   **What to do**:
   - Create `src/data/quran.ts`: Typed interface for `quran-json`
   - Methods: `getSurah(id)`, `getVerse(ref)`, `search(query)`
