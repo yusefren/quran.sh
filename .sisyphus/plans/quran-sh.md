@@ -162,7 +162,7 @@ Steps:
   - Left: Sidebar (30%), Right: Main (70%)
   - Test: `testRender` verifies layout structure
 
-- [ ] 7. **Component: Surah List (Sidebar)**
+- [x] 7. **Component: Surah List (Sidebar)**
   **What to do**:
   - List 114 Surahs in `ScrollBox` or `Select`
   - Handle `Up`/`Down` navigation
