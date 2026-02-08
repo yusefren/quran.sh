@@ -214,8 +214,8 @@ Steps:
 ---
 
 ## Success Criteria
-- [ ] `bun test` passes (Logic + TUI components)
-- [ ] CLI `read` and `log` commands work
-- [ ] TUI navigates 114 surahs and displays text
-- [ ] User progress is persisted to SQLite
-- [ ] No crash on resize or missing data
+- [x] `bun test` passes (Logic + TUI components)
+- [x] CLI `read` and `log` commands work
+- [x] TUI navigates 114 surahs and displays text
+- [x] User progress is persisted to SQLite
+- [x] No crash on resize or missing data
