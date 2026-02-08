@@ -232,3 +232,39 @@
 - SQLite date functions: used strftime('%Y-%m-%d', read_at) to extract date part.
 - TUI components: built using @opentui/solid, leveraging intrinsic elements like <box> and <text>.
 - CLI structure: simple argument parsing in src/index.ts, dispatching to handler functions.
+
+## Task 12: Search Integration (2026-02-08)
+
+### CLI Search Command (`handleSearch`)
+- Pattern follows `handleRead`/`handleLog`: returns `{ ok, output }` for consistent exit code handling
+- Multi-word search: uses `args.slice(1).join(" ")` instead of just `args[1]` to support queries like `search the merciful`
+- Output format: `[surah:verse] translation` per line, preceded by result count header
+- Edge cases: empty query → error to stderr, no results → error message, success → stdout with count
+
+### TUI Search Mode (App key handler)
+- **Search mode as state machine**: `isSearchMode` signal gates all key input
+- When `isSearchMode === true`, ALL keypresses are intercepted for search input (no `q` quit, no `Tab` switch, etc.)
+- `/` key enters search mode (sets `isSearchMode(true)`, focuses reader panel, clears input)
+- **Enter**: executes `search(query)` from data layer, populates `searchResults` signal, exits search mode
+- **ESC in search mode**: cancels search, clears input and results
+- **ESC in normal mode**: clears existing search results (returns to surah view)
+- **Backspace**: slices last char from `searchInput`
+- **Printable chars**: appended only if `str.length === 1` and no ctrl/meta modifier (avoids capturing escape sequences)
+
+### Reader Component Search Display
+- New optional props: `searchResults`, `searchQuery`, `isSearchMode`, `searchInput`
+- Three render modes: (1) search input active, (2) search results, (3) normal surah view
+- Search results displayed in scrollbox with header showing count and query
+- "Press ESC to return" hint shown below results header
+- Panel title dynamically changes: "Search: _" during input, "Search: {query} (N results)" for results, surah name normally
+- All new props are optional — existing tests pass without changes (backward compatible)
+
+### Architecture Decision
+- No `DialogPrompt` or `InputRenderable` from OpenTUI — no built-in text input widget found
+- Implemented inline search input: simple `<text>` element showing `/{input}_` at top of reader
+- This avoids external dependencies and keeps the implementation simple
+- Search state (4 signals) lifted to App component, passed down as props to Reader
+
+### Bug Fixes During Task
+- Fixed duplicate `handleStreak()` function and duplicate `getReadingStats` import in `src/index.ts` (pre-existing issues from earlier tasks)
+- Added `search` import to index.ts and `search`/`VerseRef` imports to app.tsx

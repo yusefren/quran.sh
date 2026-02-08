@@ -10,10 +10,9 @@
  *   1:1          — single verse by surah:verse
  *   al-fatihah   — full surah by transliterated name
  */
-import { getSurah, getVerse, TOTAL_SURAHS } from "./data/quran.ts";
+import { getSurah, getVerse, search, TOTAL_SURAHS } from "./data/quran.ts";
 import type { Surah, VerseRef } from "./data/quran.ts";
 import { logVerse, logSurah } from "./data/log.ts";
-import { getReadingStats } from "./data/streaks.ts";
 import { getReadingStats } from "./data/streaks.ts";
 
 // ---------------------------------------------------------------------------
@@ -132,16 +131,30 @@ function handleStreak(): void {
 }
 
 // ---------------------------------------------------------------------------
-// Streak command
+// Search command
 // ---------------------------------------------------------------------------
 
-function handleStreak(): void {
-  const stats = getReadingStats();
-  console.log("📖 Reading Streak");
-  console.log("──────────────────");
-  console.log(`Current Streak: ${stats.currentStreak} days`);
-  console.log(`Longest Streak: ${stats.longestStreak} days`);
-  console.log(`Total Reading Days: ${stats.totalDays} days`);
+function handleSearch(query: string): { ok: boolean; output: string } {
+  if (!query || query.trim().length === 0) {
+    return {
+      ok: false,
+      output: 'Error: Missing search query. Usage: quran.sh search <query>',
+    };
+  }
+
+  const results = search(query);
+  if (results.length === 0) {
+    return {
+      ok: false,
+      output: `No results found for "${query}".`,
+    };
+  }
+
+  const lines = results.map((r) => `[${r.reference}] ${r.translation}`);
+  return {
+    ok: true,
+    output: `Found ${results.length} result(s) for "${query}":\n\n${lines.join("\n")}`,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -152,9 +165,10 @@ function showUsage(): void {
   console.log(`quran.sh — Read the Quran from your terminal
 
 Usage:
-  quran.sh read   <ref>  Read a surah or verse
-  quran.sh log    <ref>  Log a surah or verse as read
-  quran.sh streak        Show reading stats and streaks
+  quran.sh read   <ref>    Read a surah or verse
+  quran.sh log    <ref>    Log a surah or verse as read
+  quran.sh search <query>  Search verse translations
+  quran.sh streak          Show reading stats and streaks
 
 Reference formats:
   1              Full surah by number (1-${TOTAL_SURAHS})
@@ -168,6 +182,7 @@ Examples:
   quran.sh read al-fatihah Al-Fatihah by name
   quran.sh log  1:1        Log verse 1:1 as read
   quran.sh log  1          Log all verses in Surah 1
+  quran.sh search merciful Search for "merciful"
   quran.sh streak          Show current streak`);
 }
 
@@ -183,6 +198,18 @@ function main(): void {
   if (command === "streak") {
     handleStreak();
     process.exit(0);
+  }
+
+  if (command === "search") {
+    const query = args.slice(1).join(" ");
+    const result = handleSearch(query);
+    if (result.ok) {
+      console.log(result.output);
+      process.exit(0);
+    } else {
+      console.error(result.output);
+      process.exit(1);
+    }
   }
 
   if (command !== "read" && command !== "log") {

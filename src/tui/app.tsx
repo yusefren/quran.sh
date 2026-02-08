@@ -6,7 +6,8 @@ import { SurahList } from "./components/surah-list";
 import { StreakChart } from "./components/streak-chart";
 import { Reader } from "./components/reader";
 import { toggleBookmark, getBookmarkedAyahs } from "../data/bookmarks";
-import { getSurah } from "../data/quran";
+import { getSurah, search } from "../data/quran";
+import type { VerseRef } from "../data/quran";
 import * as readline from "node:readline";
 
 // --- Theme Provider ---
@@ -51,6 +52,10 @@ const App: Component = () => {
   const [focusedPanel, setFocusedPanel] = createSignal<"sidebar" | "reader">("sidebar");
   const [currentVerseId, setCurrentVerseId] = createSignal(1);
   const [bookmarkedAyahs, setBookmarkedAyahs] = createSignal<Set<number>>(new Set());
+  const [isSearchMode, setIsSearchMode] = createSignal(false);
+  const [searchInput, setSearchInput] = createSignal("");
+  const [searchResults, setSearchResults] = createSignal<VerseRef[]>([]);
+  const [searchQuery, setSearchQuery] = createSignal("");
 
   /** Refresh the bookmarked ayahs set for the current surah from the DB */
   const refreshBookmarks = () => {
@@ -75,11 +80,62 @@ const App: Component = () => {
     }
 
     const onKeyPress = (str: string, key: any) => {
+      // --- Search mode input handling ---
+      if (isSearchMode()) {
+        if (key && key.name === 'escape') {
+          // ESC exits search mode and clears results
+          setIsSearchMode(false);
+          setSearchInput("");
+          setSearchResults([]);
+          setSearchQuery("");
+          return;
+        }
+        if (key && key.name === 'return') {
+          // Enter executes search
+          const query = searchInput();
+          if (query.trim().length > 0) {
+            const results = search(query);
+            setSearchResults(results);
+            setSearchQuery(query);
+          }
+          setIsSearchMode(false);
+          return;
+        }
+        if (key && key.name === 'backspace') {
+          setSearchInput(prev => prev.slice(0, -1));
+          return;
+        }
+        // Append printable characters to search input
+        if (str && str.length === 1 && !key?.ctrl && !key?.meta) {
+          setSearchInput(prev => prev + str);
+          return;
+        }
+        return;
+      }
+
+      // --- Normal mode key handling ---
       if (key && key.name === 'q') {
         process.exit(0);
       }
       if (key && key.name === 'tab') {
         setFocusedPanel(prev => prev === 'sidebar' ? 'reader' : 'sidebar');
+      }
+
+      // `/` opens search mode
+      if (str === '/') {
+        setIsSearchMode(true);
+        setSearchInput("");
+        setFocusedPanel("reader");
+        return;
+      }
+
+      // ESC in normal mode clears search results (return to surah view)
+      if (key && key.name === 'escape') {
+        if (searchResults().length > 0) {
+          setSearchResults([]);
+          setSearchQuery("");
+        }
+        return;
       }
 
       // Reader-specific keys (only when reader panel is focused)
@@ -149,6 +205,10 @@ const App: Component = () => {
             focused={focusedPanel() === "reader"}
             currentVerseId={currentVerseId()}
             bookmarkedAyahs={bookmarkedAyahs()}
+            searchResults={searchResults()}
+            searchQuery={searchQuery()}
+            isSearchMode={isSearchMode()}
+            searchInput={searchInput()}
           />
         </Layout>
       </RouteProvider>

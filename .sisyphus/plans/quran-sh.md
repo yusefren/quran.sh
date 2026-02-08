@@ -191,14 +191,14 @@ Steps:
   - DB: Persist to `bookmarks` table
   - UI: Show `*` indicator next to bookmarked verses
 
-- [ ] 11. **Feature: Reading Streak**
+- [x] 11. **Feature: Reading Streak**
   **What to do**:
   - Calculate streaks from `reading_log`
   - Create `src/tui/components/streak-chart.tsx` (GitHub style grid)
   - Display on Home/Dashboard view
   - CLI: `quran streak` command
 
-- [ ] 12. **Search Integration**
+- [x] 12. **Search Integration**
   **What to do**:
   - CLI: `quran search <query>`
   - TUI: `/` opens search dialog (using `DialogPrompt`)
