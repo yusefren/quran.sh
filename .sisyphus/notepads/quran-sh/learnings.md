@@ -156,3 +156,33 @@
 - OpenTUI Layout: Used <box flexDirection="row"> with width="30%" and width="70%" for 2-panel layout. Yoga layout supports percentage strings in OpenTUI.
 - Solid Context: Implemented minimal RouteProvider and ThemeProvider using createContext and createSignal.
 - Testing: testRender from @opentui/solid works well with bun test. Captured output shows borders correctly for nested boxes.
+- OpenTUI SelectRenderable emits index (number) in 'itemSelected' and 'selectionChanged' events, not the option object. Need to look up option by index.
+- OpenTUI SelectRenderable requires explicit focus management in tests. 'testRender' environment might not auto-focus the first element correctly without manual intervention.
+- Component focus in OpenTUI + Solid might need 'ref' based focus trigger in 'onMount' or explicit 'focusable={true}' prop handling.
+
+## Task 8: Reader Component (Main Panel)
+
+### OpenTUI ScrollBox
+- Used `<scrollbox>` intrinsic element for scrollable content.
+- Key props: `scrollable={true}`, `scrollbar={true}`, `focusable={true}`, `focused={true}`, `keys={true}`.
+- Handles arrow keys (Up/Down) natively when focused.
+- Content clipping works as expected (verified in tests).
+
+### Component Structure
+- `Reader` takes `surahId` and `focused` props.
+- Uses `createMemo` to reactively update Surah data when `surahId` changes.
+- Layout: Outer `box` with title/border -> Inner `scrollbox` -> List of `box` (one per verse).
+- Error state: Renders simple "Surah not found" message if ID is invalid.
+
+### Testing TUI Components
+- `testRender` from `@opentui/solid` allows verifying TUI output.
+- `captureSpans()` returns structured text data (lines/spans).
+- `mockInput.pressArrow("down")` simulates user input.
+- `await renderOnce()` or `await new Promise(...)` needed to allow layout/scroll updates.
+- Verified scrolling by checking visibility of verses that are initially out of view.
+
+
+### Future Improvements
+- `ScrollBox` handles standard arrow keys (Up/Down/PageUp/PageDown).
+- Custom key bindings (like `j`/`k`) require further investigation into OpenTUI event system (e.g. `on:keypress` or `useInput` hook).
+

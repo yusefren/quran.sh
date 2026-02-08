@@ -169,7 +169,7 @@ Steps:
   - Handle `Enter` to select
   - Test: `testRender` navigation logic
 
-- [ ] 8. **Component: Reader View (Main)**
+- [x] 8. **Component: Reader View (Main)**
   **What to do**:
   - Display verses for selected Surah in `ScrollBox`
   - Format: `[Ref] Translation`
