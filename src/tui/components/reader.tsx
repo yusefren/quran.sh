@@ -1,5 +1,5 @@
 /** @jsxImportSource @opentui/solid */
-import { Component, createMemo, Show } from "solid-js";
+import { Component, createMemo, Show, createEffect, on } from "solid-js";
 import { getSurah } from "../../data/quran";
 import type { VerseRef } from "../../data/quran";
 import { useTheme } from "../theme";
@@ -33,6 +33,27 @@ export const Reader: Component<ReaderProps> = (props) => {
   const isTranslationFocused = () => props.focusedPane === "translation";
   const isTransliterationFocused = () => props.focusedPane === "transliteration";
   const isAnyReaderFocused = () => isArabicFocused() || isTranslationFocused() || isTransliterationFocused();
+
+  const scrollRefs: Record<string, any> = {};
+
+  createEffect(on(() => props.currentVerseId, (verseId) => {
+    if (verseId === undefined) return;
+
+    // Small delay to ensure layout has updated
+    setTimeout(() => {
+      ["arabic", "translation", "transliteration"].forEach(mode => {
+        const ref = scrollRefs[mode];
+        if (ref && typeof ref.getChildren === "function") {
+          const children = ref.getChildren();
+          const target = children[verseId - 1];
+          if (target) {
+            // Scroll to the verse. Subtract a bit for better visibility if needed.
+            ref.scrollTo(target.y);
+          }
+        }
+      });
+    }, 10);
+  }));
 
   const paneTitle = (label: string, focused: boolean, extra?: string) => {
     const t = theme();
@@ -74,6 +95,7 @@ export const Reader: Component<ReaderProps> = (props) => {
 
     return (
       <scrollbox
+        ref={(el: any) => scrollRefs[mode] = el}
         width="100%"
         height="100%"
         focusable={true}
@@ -83,6 +105,7 @@ export const Reader: Component<ReaderProps> = (props) => {
         flexDirection="column"
         overflow="hidden"
         backgroundColor={t.colors.background}
+        viewportCulling={true}
       >
         {surah()!.verses.map((v) => {
           const isCurrent = v.id === (props.currentVerseId ?? 1);
@@ -141,6 +164,7 @@ export const Reader: Component<ReaderProps> = (props) => {
       borderStyle={theme().borderStyle}
       borderColor={theme().colors.border}
       backgroundColor={theme().colors.background}
+      viewportCulling={true}
     >
       <box paddingBottom={1}>
         <text color={theme().colors.header} bold>
