@@ -1,4 +1,3 @@
-import { type FC } from "react";
 import { useTheme } from "../theme";
 
 interface ReflectionDialogProps {
@@ -10,7 +9,7 @@ interface ReflectionDialogProps {
   onInput: (text: string) => void;
 }
 
-export const ReflectionDialog: FC<ReflectionDialogProps> = (props) => {
+export function ReflectionDialog(props: ReflectionDialogProps) {
   const { theme } = useTheme();
 
   if (!props.visible) return null;

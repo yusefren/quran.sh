@@ -1,4 +1,3 @@
-import { type FC } from "react";
 import { TextAttributes } from "@opentui/core";
 import { useTheme } from "../theme";
 
@@ -6,7 +5,7 @@ interface HelpDialogProps {
   visible: boolean;
 }
 
-export const HelpDialog: FC<HelpDialogProps> = (props) => {
+export function HelpDialog(props: HelpDialogProps) {
   const { theme } = useTheme();
 
   const shortcuts = [

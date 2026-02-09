@@ -1,4 +1,4 @@
-import { type FC, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { SurahList } from "./surah-list";
 import { useRoute } from "../router";
 import { useTheme } from "../theme";
@@ -14,7 +14,7 @@ export interface LayoutProps {
   panelFocused?: boolean;
 }
 
-export const Layout: FC<LayoutProps> = (props) => {
+export function Layout(props: LayoutProps) {
   const { theme } = useTheme();
   const { mode, resolvedMode } = useMode();
   const { navigate } = useRoute();

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, useEffect, type ReactNode, type FC } from "react";
+import { createContext, useContext, useState, useMemo, useEffect, type ReactNode } from "react";
 import { getPreference, setPreference } from "../data/preferences.ts";
 
 export type ColorMode = "dark" | "light" | "auto";
@@ -32,7 +32,7 @@ function detectTerminalMode(): "dark" | "light" {
   }
 }
 
-export const ModeProvider: FC<{ children: ReactNode }> = ({ children }) => {
+export function ModeProvider({ children }: { children: ReactNode }) {
   const initialMode = (getPreference("color_mode") as ColorMode) || "auto";
   const [mode, setModeInternal] = useState<ColorMode>(initialMode);
   const [detectedMode, setDetectedMode] = useState<"dark" | "light">("dark");

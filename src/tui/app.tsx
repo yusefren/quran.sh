@@ -1,5 +1,5 @@
 import { useKeyboard } from "@opentui/react";
-import { useState, useEffect, useCallback, useRef, type FC } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Layout } from "./components/layout";
 import { RouteProvider } from "./router";
 import { SurahList } from "./components/surah-list";
@@ -55,7 +55,7 @@ const savedPrefs = {
   showPanel: loadPref("showPanel", "false") === "true",
 };
 
-const AppContent: FC = () => {
+function AppContent() {
   const { cycleTheme } = useTheme();
   const { cycleMode } = useMode();
 
@@ -622,7 +622,7 @@ const AppContent: FC = () => {
   // const { resolvedMode } = useMode();
 
   return (
-    <RouteProvider>
+    <RouteProvider key={theme.id}>
       <Layout
         showSidebar={showSidebar}
         showPanel={showPanel}
@@ -719,7 +719,7 @@ const AppContent: FC = () => {
   );
 };
 
-const App: FC = () => {
+function App() {
   return (
     <ModeProvider>
       <ThemeProvider>

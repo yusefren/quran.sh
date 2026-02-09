@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode, type FC } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 // --- Route Provider ---
 interface RouteContextType {
@@ -8,7 +8,7 @@ interface RouteContextType {
 
 const RouteContext = createContext<RouteContextType | undefined>(undefined);
 
-export const RouteProvider: FC<{ children: ReactNode }> = ({ children }) => {
+export function RouteProvider({ children }: { children: ReactNode }) {
   const [path, setPath] = useState("/");
 
   const navigate = (newPath: string) => {
@@ -20,7 +20,7 @@ export const RouteProvider: FC<{ children: ReactNode }> = ({ children }) => {
       {children}
     </RouteContext.Provider>
   );
-};
+}
 
 export const useRoute = () => {
   const context = useContext(RouteContext);

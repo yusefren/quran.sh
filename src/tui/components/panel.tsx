@@ -1,4 +1,4 @@
-import { type FC, useMemo } from "react";
+import { useMemo } from "react";
 import { useTheme } from "../theme";
 import type { Bookmark } from "../../data/bookmarks";
 import type { Cue } from "../../data/cues";
@@ -15,7 +15,7 @@ interface PanelProps {
   focused: boolean;
 }
 
-export const Panel: FC<PanelProps> = (props) => {
+export function Panel(props: PanelProps) {
   const { theme } = useTheme();
 
   const currentItems = useMemo(() => {

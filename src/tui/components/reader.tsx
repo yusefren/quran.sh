@@ -1,4 +1,4 @@
-import { type FC, useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { TextAttributes } from "@opentui/core";
 import { getSurah } from "../../data/quran";
 import type { VerseRef } from "../../data/quran";
@@ -27,7 +27,7 @@ export interface ReaderProps {
   onVerseSelect?: (verseId: number) => void;
 }
 
-export const Reader: FC<ReaderProps> = (props) => {
+export function Reader(props: ReaderProps) {
   const { theme } = useTheme();
   const surah = useMemo(() => getSurah(props.surahId, props.language), [props.surahId, props.language]);
   const hasSearchResults =

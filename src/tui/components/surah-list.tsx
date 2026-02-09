@@ -1,4 +1,4 @@
-import { type FC, useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useKeyboard } from "@opentui/react";
 import { getSurah, TOTAL_SURAHS } from "../../data/quran";
 import { useTheme } from "../theme";
@@ -10,7 +10,7 @@ export interface SurahListProps {
   disabled?: boolean;
 }
 
-export const SurahList: FC<SurahListProps> = (props) => {
+export function SurahList(props: SurahListProps) {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);

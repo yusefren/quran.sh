@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, type ReactNode, type FC } from "react";
+import { createContext, useContext, useState, useMemo, type ReactNode } from "react";
 import type { BorderStyle } from "@opentui/core";
 import { getPreference, setPreference } from "../data/preferences.ts";
 import { useMode } from "./mode";
@@ -716,7 +716,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const { resolvedMode } = useMode();
   
   // Synchronously load saved theme preference before signal creation (no flash)

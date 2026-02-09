@@ -1,8 +1,7 @@
-import { type FC } from "react";
 import { getReadingStats } from "../../data/streaks.ts";
 import { useTheme } from "../theme";
 
-export const StreakChart: FC = () => {
+export function StreakChart() {
   const { theme } = useTheme();
   const stats = getReadingStats();
   const { activityGrid } = stats;

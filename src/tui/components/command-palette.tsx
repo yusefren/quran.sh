@@ -1,4 +1,3 @@
-import { type FC } from "react";
 import { useTheme } from "../theme";
 
 export interface CommandItem {
@@ -13,7 +12,7 @@ interface CommandPaletteProps {
   selectedIndex: number;
 }
 
-export const CommandPalette: FC<CommandPaletteProps> = (props) => {
+export function CommandPalette(props: CommandPaletteProps) {
   const { theme } = useTheme();
 
   if (!props.visible) return null;
