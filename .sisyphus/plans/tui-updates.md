@@ -209,7 +209,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ## TODOs
 
-- [ ] 0. Setup bun test infrastructure
+- [x] 0. Setup bun test infrastructure
 
   **What to do**:
   - Bun has a built-in test runner (`bun test`) that discovers `*.test.ts` files automatically — no config needed
