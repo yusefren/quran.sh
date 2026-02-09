@@ -16,8 +16,9 @@
  * native BiDi, this function can be updated to apply bidi-js processing.
  */
 export function processArabicText(text: string): string {
-  // Terminal handles BiDi natively — no reordering needed
-  return text;
+  // Wrap with RLE (Right-to-Left Embedding) and PDF (Pop Directional Formatting)
+  // This forces the terminal to treat the block as RTL, even if it tries to be smart.
+  return `\u202B${text}\u202C`;
 }
 
 /**

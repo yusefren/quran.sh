@@ -47,8 +47,10 @@ export const Reader: Component<ReaderProps> = (props) => {
           const children = ref.getChildren();
           const target = children[verseId - 1];
           if (target) {
-            // Scroll to the verse. Subtract a bit for better visibility if needed.
-            ref.scrollTo(target.y);
+            const viewportHeight = ref.getLayoutNode().getLayoutHeight();
+            const verseHeight = target.getLayoutNode().getLayoutHeight();
+            const centerY = target.y - (viewportHeight / 2) + (verseHeight / 2);
+            ref.scrollTo(Math.max(0, centerY));
           }
         }
       });
@@ -105,9 +107,18 @@ export const Reader: Component<ReaderProps> = (props) => {
         flexDirection="column"
         overflow="hidden"
         backgroundColor={t.colors.background}
-        viewportCulling={true}
-      >
-        {surah()!.verses.map((v) => {
+                viewportCulling={true}
+                verticalScrollbarOptions={{
+                  trackOptions: {
+                    character: " ",
+                  },
+                  thumbOptions: {
+                    character: t.ornaments.scrollbarThumb,
+                  }
+                }}
+              >
+                {surah()!.verses.map((v) => {
+
           const isCurrent = v.id === (props.currentVerseId ?? 1);
           const isBookmarked = props.bookmarkedAyahs?.has(v.id) ?? false;
           const marker = isCurrent ? t.ornaments.verseMarker : " ";
@@ -220,6 +231,7 @@ export const Reader: Component<ReaderProps> = (props) => {
               overflow="hidden"
               borderStyle={isArabicFocused() ? theme().borderStyleFocused : theme().borderStyle}
               borderColor={isArabicFocused() ? theme().colors.borderFocused : theme().colors.border}
+              customBorderChars={theme().borderChars}
               focusedBorderColor={theme().colors.borderFocused}
               title={paneTitle(surahLabel(), isArabicFocused(), searchTitle())}
               titleAlignment="left"
@@ -240,6 +252,7 @@ export const Reader: Component<ReaderProps> = (props) => {
                   overflow="hidden"
                   borderStyle={isTranslationFocused() ? theme().borderStyleFocused : theme().borderStyle}
                   borderColor={isTranslationFocused() ? theme().colors.borderFocused : theme().colors.border}
+                  customBorderChars={theme().borderChars}
                   focusedBorderColor={theme().colors.borderFocused}
                   title={paneTitle("Translation", isTranslationFocused())}
                   titleAlignment="left"
@@ -254,6 +267,7 @@ export const Reader: Component<ReaderProps> = (props) => {
                   overflow="hidden"
                   borderStyle={isTransliterationFocused() ? theme().borderStyleFocused : theme().borderStyle}
                   borderColor={isTransliterationFocused() ? theme().colors.borderFocused : theme().colors.border}
+                  customBorderChars={theme().borderChars}
                   focusedBorderColor={theme().colors.borderFocused}
                   title={paneTitle("Transliteration", isTransliterationFocused())}
                   titleAlignment="left"

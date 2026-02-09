@@ -1,6 +1,6 @@
 /** @jsxImportSource @opentui/solid */
-import { render } from "@opentui/solid";
-import { createSignal, onMount, onCleanup, Component, Show } from "solid-js";
+import { render, useKeyboard } from "@opentui/solid";
+import { createSignal, onMount, onCleanup, Component, Show, createEffect } from "solid-js";
 import { Layout } from "./components/layout";
 import { RouteProvider } from "./router";
 import { SurahList } from "./components/surah-list";
@@ -23,7 +23,6 @@ import type { VerseRef } from "../data/quran";
 import { ThemeProvider, useTheme } from "./theme";
 import type { Theme } from "./theme";
 import { ModeProvider, useMode } from "./mode";
-import * as readline from "node:readline";
 
 export { useTheme };
 export type { Theme };
@@ -196,329 +195,324 @@ const AppContent: Component = () => {
     setFocusedPanel(next);
   };
 
-  onMount(() => {
-    refreshBookmarks();
-    refreshPanelData();
-
-    try {
-      if (process.stdin.isTTY) {
-        process.stdin.setRawMode(true);
-        readline.emitKeypressEvents(process.stdin);
-      }
-    } catch (e) {
-      // Ignore
+  useKeyboard((key) => {
+    // Ctrl+P: toggle command palette
+    if (key.ctrl && key.name === "p") {
+      setShowPalette((prev) => !prev);
+      setPaletteIndex(0);
+      return;
     }
 
-    const onKeyPress = (str: string, key: any) => {
-      // Ctrl+P: toggle command palette
-      if (key && key.ctrl && key.name === "p") {
-        setShowPalette((prev) => !prev);
-        setPaletteIndex(0);
+    const str = key.sequence || key.name;
+
+    if (showPalette()) {
+      if (key.name === "escape") {
+        setShowPalette(false);
         return;
       }
-
-      if (showPalette()) {
-        if (key && key.name === "escape") {
+      if (str === "j" || key.name === "down") {
+        setPaletteIndex((prev) => (prev + 1) % paletteCommands.length);
+        return;
+      }
+      if (str === "k" || key.name === "up") {
+        setPaletteIndex((prev) => (prev - 1 + paletteCommands.length) % paletteCommands.length);
+        return;
+      }
+      if (key.name === "return") {
+        const cmd = paletteCommands[paletteIndex()];
+        if (cmd) {
+          cmd.action();
           setShowPalette(false);
-          return;
-        }
-        if (str === "j" || (key && key.name === "down")) {
-          setPaletteIndex((prev) => (prev + 1) % paletteCommands.length);
-          return;
-        }
-        if (str === "k" || (key && key.name === "up")) {
-          setPaletteIndex((prev) => (prev - 1 + paletteCommands.length) % paletteCommands.length);
-          return;
-        }
-        if (key && key.name === "return") {
-          const cmd = paletteCommands[paletteIndex()];
-          if (cmd) {
-            cmd.action();
-            setShowPalette(false);
-          }
-          return;
         }
         return;
       }
+      return;
+    }
 
-      if (showReflectionDialog()) {
-        if (key && key.name === "escape") {
-          setShowReflectionDialog(false);
-          return;
-        }
-        if (key && key.name === "return") {
-          const surahId = selectedSurahId();
-          const ayahId = currentVerseId();
-          const verseRef = `${surahId}:${ayahId}`;
-          try {
-            addReflection(surahId, ayahId, verseRef, reflectionInput());
-            setShowReflectionDialog(false);
-            refreshPanelData();
-            showFlash("Reflection saved");
-          } catch {
-            /* DB */
-          }
-          return;
-        }
-        if (key && key.name === "backspace") {
-          setReflectionInput((prev) => prev.slice(0, -1));
-          return;
-        }
-        if (str && str.length === 1 && !key?.ctrl && !key?.meta) {
-          setReflectionInput((prev) => prev + str);
-          return;
-        }
+    if (showReflectionDialog()) {
+      if (key.name === "escape") {
+        setShowReflectionDialog(false);
         return;
       }
-
-      if (showHelp()) {
-        if (key && (key.name === 'escape' || key.name === 'q' || str === '?')) {
-          setShowHelp(false);
-        }
-        return;
-      }
-
-      if (isSearchMode()) {
-        if (key && key.name === 'escape') {
-          setIsSearchMode(false);
-          setSearchInput("");
-          setSearchResults([]);
-          setSearchQuery("");
-          return;
-        }
-        if (key && key.name === 'return') {
-          const query = searchInput();
-          if (query.trim().length > 0) {
-            const results = search(query);
-            setSearchResults(results);
-            setSearchQuery(query);
-          }
-          setIsSearchMode(false);
-          return;
-        }
-        if (key && key.name === 'backspace') {
-          setSearchInput(prev => prev.slice(0, -1));
-          return;
-        }
-        if (str && str.length === 1 && !key?.ctrl && !key?.meta) {
-          setSearchInput(prev => prev + str);
-          return;
-        }
-        return;
-      }
-
-      if (key && key.name === 'q') {
-        process.exit(0);
-      }
-
-      if (str === '?') {
-        setShowHelp(true);
-        return;
-      }
-
-      if (focusedPanel() === "panel") {
-        const tabs: PanelTab[] = ["bookmarks", "cues", "reflections"];
-        const items = panelTab() === "bookmarks" ? allBookmarks() :
-                      panelTab() === "cues" ? allCues() : allReflections();
-
-        if (key && (key.name === "left" || str === "h")) {
-          const idx = tabs.indexOf(panelTab());
-          setPanelTab(tabs[(idx - 1 + tabs.length) % tabs.length]);
-          setPanelIndex(0);
-          return;
-        }
-        if (key && (key.name === "right" || str === "l")) {
-          const idx = tabs.indexOf(panelTab());
-          setPanelTab(tabs[(idx + 1) % tabs.length]);
-          setPanelIndex(0);
-          return;
-        }
-        if (str === "j" || (key && key.name === "down")) {
-          setPanelIndex((prev) => Math.min(prev + 1, Math.max(0, items.length - 1)));
-          return;
-        }
-        if (str === "k" || (key && key.name === "up")) {
-          setPanelIndex((prev) => Math.max(prev - 1, 0));
-          return;
-        }
-        if (key && key.name === "return") {
-          const item = items[panelIndex()];
-          if (item) {
-            setSelectedSurahId(item.surah);
-            setCurrentVerseId(item.ayah);
-            refreshBookmarks();
-
-            if (panelTab() === "reflections") {
-              setReflectionInput((item as Reflection).note);
-              setShowReflectionDialog(true);
-            }
-          }
-          return;
-        }
-      }
-
-      if (str === 'a') {
-        setShowArabic(prev => !prev);
-        return;
-      }
-      if (str === 't') {
-        setShowTranslation(prev => !prev);
-        return;
-      }
-      if (str === 'r') {
-        setShowTransliteration(prev => !prev);
-        return;
-      }
-      if (str === 'l') {
-        const idx = LANGUAGES.indexOf(language() as any);
-        if (idx !== -1) {
-          const next = LANGUAGES[(idx + 1) % LANGUAGES.length];
-          setLanguage(next);
-        }
-        return;
-      }
-
-      if (str === 'T') {
-        cycleTheme();
-        return;
-      }
-
-      if (str === 'D') {
-        cycleMode();
-        return;
-      }
-
-      if (str === 's') {
-        const wasVisible = showSidebar();
-        setShowSidebar(prev => !prev);
-        if (wasVisible && focusedPanel() === "sidebar") {
-          setFocusedPanel("arabic");
-        }
-        if (!wasVisible) {
-          setFocusedPanel("sidebar");
-        }
-        return;
-      }
-
-      if (str === 'B') {
-        const wasVisible = showPanel();
-        setShowPanel(prev => !prev);
-        if (wasVisible && focusedPanel() === "panel") {
-          setFocusedPanel("arabic");
-        }
-        if (!wasVisible) {
-          refreshPanelData();
-          setFocusedPanel("panel");
-        }
-        return;
-      }
-
-      if (str === "R") {
+      if (key.name === "return") {
         const surahId = selectedSurahId();
         const ayahId = currentVerseId();
+        const verseRef = `${surahId}:${ayahId}`;
         try {
-          const existing = getReflection(surahId, ayahId);
-          setReflectionInput(existing ? existing.note : "");
-          setShowReflectionDialog(true);
+          addReflection(surahId, ayahId, verseRef, reflectionInput());
+          setShowReflectionDialog(false);
+          refreshPanelData();
+          showFlash("Reflection saved");
         } catch {
           /* DB */
         }
         return;
       }
-
-      if (str === '+' || str === '=') {
-        setVerseSpacing(prev => Math.min(prev + 1, 5));
+      if (key.name === "backspace") {
+        setReflectionInput((prev) => prev.slice(0, -1));
         return;
       }
-      if (str === '-') {
-        setVerseSpacing(prev => Math.max(prev - 1, 0));
+      if (str && str.length === 1 && !key.ctrl && !key.meta) {
+        setReflectionInput((prev) => prev + str);
         return;
       }
+      return;
+    }
 
-      if (key && key.name === 'tab') {
-        cycleFocus();
-        return;
+    if (showHelp()) {
+      if (key.name === 'escape' || key.name === 'q' || str === '?') {
+        setShowHelp(false);
       }
+      return;
+    }
 
-      if (str === '/') {
-        setIsSearchMode(true);
+    if (isSearchMode()) {
+      if (key.name === 'escape') {
+        setIsSearchMode(false);
         setSearchInput("");
+        setSearchResults([]);
+        setSearchQuery("");
+        return;
+      }
+      if (key.name === 'return') {
+        const query = searchInput();
+        if (query.trim().length > 0) {
+          const results = search(query);
+          setSearchResults(results);
+          setSearchQuery(query);
+        }
+        setIsSearchMode(false);
+        return;
+      }
+      if (key.name === 'backspace') {
+        setSearchInput(prev => prev.slice(0, -1));
+        return;
+      }
+      if (str && str.length === 1 && !key.ctrl && !key.meta) {
+        setSearchInput(prev => prev + str);
+        return;
+      }
+      return;
+    }
+
+    if (key.name === 'q') {
+      process.exit(0);
+    }
+
+    if (str === '?') {
+      setShowHelp(true);
+      return;
+    }
+
+    if (focusedPanel() === "panel") {
+      const tabs: PanelTab[] = ["bookmarks", "cues", "reflections"];
+      const items = panelTab() === "bookmarks" ? allBookmarks() :
+                    panelTab() === "cues" ? allCues() : allReflections();
+
+      if (key.name === "left" || str === "h") {
+        const idx = tabs.indexOf(panelTab());
+        setPanelTab(tabs[(idx - 1 + tabs.length) % tabs.length]);
+        setPanelIndex(0);
+        return;
+      }
+      if (key.name === "right" || str === "l") {
+        const idx = tabs.indexOf(panelTab());
+        setPanelTab(tabs[(idx + 1) % tabs.length]);
+        setPanelIndex(0);
+        return;
+      }
+      if (str === "j" || key.name === "down") {
+        setPanelIndex((prev) => Math.min(prev + 1, Math.max(0, items.length - 1)));
+        return;
+      }
+      if (str === "k" || key.name === "up") {
+        setPanelIndex((prev) => Math.max(prev - 1, 0));
+        return;
+      }
+      if (key.name === "return") {
+        const item = items[panelIndex()];
+        if (item) {
+          setSelectedSurahId(item.surah);
+          setCurrentVerseId(item.ayah);
+          refreshBookmarks();
+
+          if (panelTab() === "reflections") {
+            setReflectionInput((item as Reflection).note);
+            setShowReflectionDialog(true);
+          }
+        }
+        return;
+      }
+    }
+
+    // Sidebar navigation handled by SurahList component mostly, but we can add global shortcuts if needed.
+    // However, if sidebar is focused, SurahList should handle it.
+    // Wait, SurahList uses <select> which handles its own keys.
+    // We should only handle global keys here.
+
+    if (str === 'a') {
+      setShowArabic(prev => !prev);
+      return;
+    }
+    if (str === 't') {
+      setShowTranslation(prev => !prev);
+      return;
+    }
+    if (str === 'r') {
+      setShowTransliteration(prev => !prev);
+      return;
+    }
+    if (str === 'l') {
+      const idx = LANGUAGES.indexOf(language() as any);
+      if (idx !== -1) {
+        const next = LANGUAGES[(idx + 1) % LANGUAGES.length];
+        setLanguage(next);
+      }
+      return;
+    }
+
+    if (str === 'T') {
+      cycleTheme();
+      return;
+    }
+
+    if (str === 'D') {
+      cycleMode();
+      return;
+    }
+
+    if (str === 's') {
+      const wasVisible = showSidebar();
+      setShowSidebar(prev => !prev);
+      if (wasVisible && focusedPanel() === "sidebar") {
         setFocusedPanel("arabic");
+      }
+      if (!wasVisible) {
+        setFocusedPanel("sidebar");
+      }
+      return;
+    }
+
+    if (str === 'B') {
+      const wasVisible = showPanel();
+      setShowPanel(prev => !prev);
+      if (wasVisible && focusedPanel() === "panel") {
+        setFocusedPanel("arabic");
+      }
+      if (!wasVisible) {
+        refreshPanelData();
+        setFocusedPanel("panel");
+      }
+      return;
+    }
+
+    if (str === "R") {
+      const surahId = selectedSurahId();
+      const ayahId = currentVerseId();
+      try {
+        const existing = getReflection(surahId, ayahId);
+        setReflectionInput(existing ? existing.note : "");
+        setShowReflectionDialog(true);
+      } catch {
+        /* DB */
+      }
+      return;
+    }
+
+    if (str === '+' || str === '=') {
+      setVerseSpacing(prev => Math.min(prev + 1, 5));
+      return;
+    }
+    if (str === '-') {
+      setVerseSpacing(prev => Math.max(prev - 1, 0));
+      return;
+    }
+
+    if (key.name === 'tab') {
+      cycleFocus();
+      return;
+    }
+
+    if (str === '/') {
+      setIsSearchMode(true);
+      setSearchInput("");
+      setFocusedPanel("arabic");
+      return;
+    }
+
+    if (key.name === 'escape') {
+      if (searchResults().length > 0) {
+        setSearchResults([]);
+        setSearchQuery("");
+      }
+      return;
+    }
+
+    if (isReaderPane(focusedPanel())) {
+      const cueSetSymbols: Record<string, number> = {
+        '!': 1, '@': 2, '#': 3, '$': 4, '%': 5, '^': 6, '&': 7, '*': 8, '(': 9
+      };
+      const cueJumpKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+      if (cueSetSymbols[str]) {
+        const slot = cueSetSymbols[str];
+        const surahId = selectedSurahId();
+        const ayahId = currentVerseId();
+        const verseRef = `${surahId}:${ayahId}`;
+        try {
+          setCue(slot, surahId, ayahId, verseRef);
+          showFlash(`Cue ${slot} set \u2192 ${verseRef}`);
+          if (showPanel()) refreshPanelData();
+        } catch { /* DB */ }
         return;
       }
 
-      if (key && key.name === 'escape') {
-        if (searchResults().length > 0) {
-          setSearchResults([]);
-          setSearchQuery("");
-        }
-        return;
-      }
-
-      if (isReaderPane(focusedPanel())) {
-        const cueSetSymbols: Record<string, number> = {
-          '!': 1, '@': 2, '#': 3, '$': 4, '%': 5, '^': 6, '&': 7, '*': 8, '(': 9
-        };
-        const cueJumpKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
-        if (cueSetSymbols[str]) {
-          const slot = cueSetSymbols[str];
-          const surahId = selectedSurahId();
-          const ayahId = currentVerseId();
-          const verseRef = `${surahId}:${ayahId}`;
-          try {
-            setCue(slot, surahId, ayahId, verseRef);
-            showFlash(`Cue ${slot} set \u2192 ${verseRef}`);
-            if (showPanel()) refreshPanelData();
-          } catch { /* DB */ }
-          return;
-        }
-
-        if (cueJumpKeys.includes(str)) {
-          const slot = parseInt(str, 10);
-          try {
-            const cue = getCue(slot);
-            if (cue) {
-              setSelectedSurahId(cue.surah);
-              setCurrentVerseId(cue.ayah);
-              refreshBookmarks();
-              showFlash(`Jumped to Cue ${slot} (${cue.verseRef})`);
-            }
-          } catch { /* DB */ }
-          return;
-        }
-
-        if (str === 'j' || (key && key.name === 'down')) {
-          const surah = getSurah(selectedSurahId());
-          if (surah && currentVerseId() < surah.totalVerses) {
-            setCurrentVerseId(prev => prev + 1);
-          }
-        }
-        if (str === 'k' || (key && key.name === 'up')) {
-          if (currentVerseId() > 1) {
-            setCurrentVerseId(prev => prev - 1);
-          }
-        }
-        if (str === 'b') {
-          const surahId = selectedSurahId();
-          const ayahId = currentVerseId();
-          const verseRef = `${surahId}:${ayahId}`;
-          try {
-            toggleBookmark(surahId, ayahId, verseRef);
+      if (cueJumpKeys.includes(str)) {
+        const slot = parseInt(str, 10);
+        try {
+          const cue = getCue(slot);
+          if (cue) {
+            setSelectedSurahId(cue.surah);
+            setCurrentVerseId(cue.ayah);
             refreshBookmarks();
-            if (showPanel()) refreshPanelData();
-          } catch {
-            // DB may not be available
+            showFlash(`Jumped to Cue ${slot} (${cue.verseRef})`);
           }
+        } catch { /* DB */ }
+        return;
+      }
+
+      if (str === 'j' || key.name === 'down') {
+        const surah = getSurah(selectedSurahId());
+        if (surah && currentVerseId() < surah.totalVerses) {
+          setCurrentVerseId(prev => prev + 1);
         }
       }
-    };
+      if (str === 'k' || key.name === 'up') {
+        if (currentVerseId() > 1) {
+          setCurrentVerseId(prev => prev - 1);
+        }
+      }
+      if (str === 'b') {
+        const surahId = selectedSurahId();
+        const ayahId = currentVerseId();
+        const verseRef = `${surahId}:${ayahId}`;
+        try {
+          toggleBookmark(surahId, ayahId, verseRef);
+          refreshBookmarks();
+          if (showPanel()) refreshPanelData();
+        } catch {
+          // DB may not be available
+        }
+      }
+      if (str === 'h') {
+        setShowHelp(true);
+      }
+    }
+  });
 
-    process.stdin.on('keypress', onKeyPress);
-
-    onCleanup(() => {
-      process.stdin.removeListener('keypress', onKeyPress);
-    });
+  onMount(() => {
+    refreshBookmarks();
+    refreshPanelData();
   });
 
   return (

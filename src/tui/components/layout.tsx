@@ -43,6 +43,7 @@ export const Layout: Component<LayoutProps> = (props) => {
             overflow="hidden"
             borderStyle={sidebarFocused() ? theme().borderStyleFocused : theme().borderStyle}
             borderColor={sidebarFocused() ? theme().colors.borderFocused : theme().colors.border}
+            customBorderChars={theme().borderChars}
             focusedBorderColor={theme().colors.borderFocused}
             title={sidebarFocused() ? ` ${theme().ornaments.focusIcon} Surahs ` : " Surahs "}
             titleAlignment="left"
@@ -67,6 +68,7 @@ export const Layout: Component<LayoutProps> = (props) => {
             overflow="hidden"
             borderStyle={panelFocused() ? theme().borderStyleFocused : theme().borderStyle}
             borderColor={panelFocused() ? theme().colors.borderFocused : theme().colors.border}
+            customBorderChars={theme().borderChars}
             focusedBorderColor={theme().colors.borderFocused}
             title={panelFocused() ? ` ${theme().ornaments.focusIcon} Activity ` : " Activity "}
             titleAlignment="left"

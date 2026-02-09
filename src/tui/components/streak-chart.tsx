@@ -29,7 +29,7 @@ export const StreakChart: Component = () => {
   };
 
   return (
-    <box flexDirection="column" borderStyle={theme().borderStyle} borderColor={theme().colors.border} padding={1}>
+    <box flexDirection="column" borderStyle={theme().borderStyle} borderColor={theme().colors.border} customBorderChars={theme().borderChars} padding={1}>
       <text bold color={theme().colors.header}>
         Reading Activity
       </text>
@@ -39,7 +39,7 @@ export const StreakChart: Component = () => {
         <text color={theme().colors.secondary} marginLeft={2}>Best: {stats.longestStreak} </text>
       </box>
 
-      <box flexDirection="row" flexWrap="wrap" width={60}>
+      <box flexDirection="row" flexWrap="wrap" width="100%">
          <For each={days}>
             {(date) => {
                const count = activityGrid[date] || 0;

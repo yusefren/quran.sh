@@ -8,6 +8,8 @@ import { useMode } from "./mode";
 // Theme interface — each dynasty defines colors, border style & ornaments
 // ---------------------------------------------------------------------------
 
+import { BorderCharacters } from "@opentui/core";
+
 export interface ThemeOrnaments {
   /** Character placed before the currently-focused verse */
   verseMarker: string;
@@ -25,6 +27,8 @@ export interface ThemeOrnaments {
   bullet: string;
   /** Panel title prefix when focused */
   focusIcon: string;
+  /** Scrollbar thumb character */
+  scrollbarThumb: string;
 }
 
 export interface ThemeColors {
@@ -58,6 +62,8 @@ export interface Theme {
   borderStyle: BorderStyle;
   /** Border style used when a panel has focus */
   borderStyleFocused: BorderStyle;
+  /** Optional custom border characters for ornamental corners */
+  borderChars?: BorderCharacters;
   /** Ornamental characters drawn from the ornamentation research */
   ornaments: ThemeOrnaments;
   colors: ThemeColors;
@@ -205,6 +211,7 @@ export const ottomanTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25C8",
     focusIcon: "\u25C6",
+    scrollbarThumb: "\u25C8",
   },
   colors: {
     primary: "#0A2342",        // Navy cobalt
@@ -291,6 +298,7 @@ export const andalusianTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25C7",
     focusIcon: "\u25C6",
+    scrollbarThumb: "\u2736",
   },
   colors: {
     primary: "#1C39BB",        // Alhambra azurite blue
@@ -375,6 +383,7 @@ export const madinahTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25CF",
     focusIcon: "\u25C6",
+    scrollbarThumb: "\u06DE",
   },
   colors: {
     primary: "#2E7D32",
@@ -418,6 +427,7 @@ export const umayyadTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25CF",
     focusIcon: "\u25C6",
+    scrollbarThumb: "\u06DE",
   },
   colors: {
     primary: "#B8860B",        // Dark goldenrod — desert gold
@@ -504,6 +514,7 @@ export const fatimidTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25C9",
     focusIcon: "\u2756",
+    scrollbarThumb: "\u06DE",
   },
   colors: {
     primary: "#191970",        // Midnight blue / deep indigo
