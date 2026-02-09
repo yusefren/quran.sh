@@ -1,6 +1,6 @@
 /** @jsxImportSource @opentui/solid */
 import { render } from "@opentui/solid";
-import { createSignal, onMount, onCleanup, Component } from "solid-js";
+import { createSignal, onMount, onCleanup, Component, Show } from "solid-js";
 import { Layout } from "./components/layout";
 import { RouteProvider } from "./router";
 import { SurahList } from "./components/surah-list";
@@ -8,6 +8,7 @@ import { StreakChart } from "./components/streak-chart";
 import { Reader } from "./components/reader";
 import { HelpDialog } from "./components/help-dialog";
 import { toggleBookmark, getBookmarkedAyahs } from "../data/bookmarks";
+import { setCue, getCue } from "../data/cues";
 import { getSurah, search, LANGUAGES } from "../data/quran";
 import type { VerseRef } from "../data/quran";
 import { ThemeProvider, useTheme } from "./theme";
@@ -40,6 +41,12 @@ const AppContent: Component = () => {
   const [showTranslation, setShowTranslation] = createSignal(true);
   const [showTransliteration, setShowTransliteration] = createSignal(false);
   const [language, setLanguage] = createSignal("en");
+  const [flashMessage, setFlashMessage] = createSignal("");
+
+  const showFlash = (msg: string) => {
+    setFlashMessage(msg);
+    setTimeout(() => setFlashMessage(""), 2000);
+  };
 
   const refreshBookmarks = () => {
     try {
@@ -195,6 +202,37 @@ const AppContent: Component = () => {
       }
 
       if (isReaderPane(focusedPanel())) {
+        const cueSetSymbols: Record<string, number> = {
+          '!': 1, '@': 2, '#': 3, '$': 4, '%': 5, '^': 6, '&': 7, '*': 8, '(': 9
+        };
+        const cueJumpKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+        if (cueSetSymbols[str]) {
+          const slot = cueSetSymbols[str];
+          const surahId = selectedSurahId();
+          const ayahId = currentVerseId();
+          const verseRef = `${surahId}:${ayahId}`;
+          try {
+            setCue(slot, surahId, ayahId, verseRef);
+            showFlash(`Cue ${slot} set \u2192 ${verseRef}`);
+          } catch { /* DB */ }
+          return;
+        }
+
+        if (cueJumpKeys.includes(str)) {
+          const slot = parseInt(str, 10);
+          try {
+            const cue = getCue(slot);
+            if (cue) {
+              setSelectedSurahId(cue.surah);
+              setCurrentVerseId(cue.ayah);
+              refreshBookmarks();
+              showFlash(`Jumped to Cue ${slot} (${cue.verseRef})`);
+            }
+          } catch { /* DB */ }
+          return;
+        }
+
         if (str === 'j' || (key && key.name === 'down')) {
           const surah = getSurah(selectedSurahId());
           if (surah && currentVerseId() < surah.totalVerses) {
@@ -270,6 +308,17 @@ const AppContent: Component = () => {
           language={language()}
           verseSpacing={verseSpacing()}
         />
+        <Show when={flashMessage()}>
+          <box
+            position="absolute"
+            bottom={2}
+            right={2}
+            padding={1}
+            backgroundColor={useTheme().theme().colors.secondary}
+          >
+            <text color={useTheme().theme().colors.background}>{flashMessage()}</text>
+          </box>
+        </Show>
         <HelpDialog visible={showHelp()} />
       </Layout>
     </RouteProvider>
