@@ -7,7 +7,7 @@ describe("Reader", () => {
   test("renders the verses of a surah", async () => {
     const { captureSpans, renderOnce, mockInput } = await testRender(() => (
       <ThemeProvider>
-        <Reader surahId={1} focused={true} />
+        <Reader surahId={1} focusedPane="arabic" />
       </ThemeProvider>
     ));
     await renderOnce();
@@ -47,7 +47,7 @@ describe("Reader", () => {
     // Render Surah 114 (An-Nas)
     const { captureSpans, renderOnce } = await testRender(() => (
       <ThemeProvider>
-        <Reader surahId={114} focused={true} />
+        <Reader surahId={114} focusedPane="arabic" />
       </ThemeProvider>
     ));
     await renderOnce();
@@ -66,7 +66,7 @@ describe("Reader", () => {
   test("displays error for invalid surah", async () => {
     const { captureSpans, renderOnce } = await testRender(() => (
       <ThemeProvider>
-        <Reader surahId={999} focused={true} />
+        <Reader surahId={999} focusedPane="arabic" />
       </ThemeProvider>
     ));
     await renderOnce();

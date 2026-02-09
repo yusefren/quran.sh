@@ -1,7 +1,7 @@
 /** @jsxImportSource @opentui/solid */
 import { Component, createSignal, onMount } from "solid-js";
 import { getSurah, TOTAL_SURAHS } from "../../data/quran";
-import { useTheme } from "../app";
+import { useTheme } from "../theme";
 
 interface SurahOption {
   name: string;
@@ -16,7 +16,7 @@ export interface SurahListProps {
 }
 
 export const SurahList: Component<SurahListProps> = (props) => {
-  const theme = useTheme();
+  const { theme } = useTheme();
   let selectRef: any;
 
   onMount(() => {
@@ -80,9 +80,9 @@ export const SurahList: Component<SurahListProps> = (props) => {
       focusable={true}
       focused={props.focused ?? true}
       style={{
-        selectedColor: theme.colors.highlight,
+        selectedColor: theme().colors.highlight,
         selectedBold: true,
-        borderColor: theme.colors.primary,
+        borderColor: theme().colors.primary,
       }}
     />
   );

@@ -12,9 +12,7 @@ describe("TUI Layout", () => {
     const output = captureCharFrame();
     console.log("Captured Output:\n" + output);
 
-    expect(output).toContain("Sidebar");
-    expect(output).toContain("Main Content");
-    // Now shows integrated components instead of placeholder
+    expect(output).toContain("Surahs");
     expect(output).toContain("Al-Fatihah");
   });
 });
