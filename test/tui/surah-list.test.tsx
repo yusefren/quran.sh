@@ -1,16 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { testRender } from "@opentui/solid";
+import { testRender } from "@opentui/react/test-utils";
 import { SurahList } from "../../src/tui/components/surah-list";
 import { ThemeProvider } from "../../src/tui/theme";
 import { ModeProvider } from "../../src/tui/mode";
 
 describe("SurahList", () => {
   test("renders the list of surahs", async () => {
-    const { captureSpans, renderOnce } = await testRender(() => (
+    const { captureSpans, renderOnce } = await testRender(
       <ModeProvider><ThemeProvider>
         <SurahList />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     const frame = captureSpans();
@@ -21,8 +22,6 @@ describe("SurahList", () => {
     // Check for some expected content
     expect(output).toContain("1. Al-Fatihah");
     expect(output).toContain("2. Al-Baqarah");
-    // Ensure scrolling works or at least initial render shows top items
-    // Since default height might be small in test environment, we might check scrolling logic separately
   });
 
   test("handles navigation and selection", async () => {
@@ -31,11 +30,12 @@ describe("SurahList", () => {
       selectedId = id;
     };
 
-    const { renderer, mockInput, renderOnce } = await testRender(() => (
+    const { renderer, mockInput, renderOnce } = await testRender(
       <ModeProvider><ThemeProvider>
         <SurahList onSelect={handleSelect} initialSelectedId={1} />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     // Manually find and focus the select component

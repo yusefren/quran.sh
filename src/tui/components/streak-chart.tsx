@@ -1,9 +1,8 @@
-/** @jsxImportSource @opentui/solid */
-import { Component, For } from "solid-js";
+import { type FC } from "react";
 import { getReadingStats } from "../../data/streaks.ts";
 import { useTheme } from "../theme";
 
-export const StreakChart: Component = () => {
+export const StreakChart: FC = () => {
   const { theme } = useTheme();
   const stats = getReadingStats();
   const { activityGrid } = stats;
@@ -17,35 +16,32 @@ export const StreakChart: Component = () => {
   const getSymbol = (count: number) => {
     if (count === 0) return "\u2591";
     if (count < 5) return "\u2593";
-    if (count < 10) return "\u2588";
     return "\u2588";
   };
 
   const getColor = (count: number) => {
-    if (count === 0) return theme().colors.muted;
-    if (count < 5) return theme().colors.primary;
-    if (count < 10) return theme().colors.header;
-    return theme().colors.highlight;
+    if (count === 0) return theme.colors.muted;
+    if (count < 5) return theme.colors.primary;
+    if (count < 10) return theme.colors.header;
+    return theme.colors.highlight;
   };
 
   return (
-    <box flexDirection="column" borderStyle={theme().borderStyle} borderColor={theme().colors.border} customBorderChars={theme().borderChars} padding={1}>
-      <text bold color={theme().colors.header}>
+    <box flexDirection="column" borderStyle={theme.borderStyle} borderColor={theme.colors.border} customBorderChars={theme.borderChars} padding={1}>
+      <text bold color={theme.colors.header}>
         Reading Activity
       </text>
       
       <box flexDirection="row" marginTop={1} marginBottom={1}>
-        <text color={theme().colors.highlight}>Streak: {stats.currentStreak} </text>
-        <text color={theme().colors.secondary} marginLeft={2}>Best: {stats.longestStreak} </text>
+        <text color={theme.colors.highlight}>Streak: {stats.currentStreak} </text>
+        <text color={theme.colors.secondary} marginLeft={2}>Best: {stats.longestStreak} </text>
       </box>
 
       <box flexDirection="row" flexWrap="wrap" width="100%">
-         <For each={days}>
-            {(date) => {
-               const count = activityGrid[date] || 0;
-               return <text color={getColor(count)}>{getSymbol(count)}</text>;
-            }}
-         </For>
+         {days.map((date) => {
+            const count = activityGrid[date] || 0;
+            return <text key={date} color={getColor(count)}>{getSymbol(count)}</text>;
+         })}
       </box>
     </box>
   );

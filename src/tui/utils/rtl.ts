@@ -1,24 +1,31 @@
 /**
  * RTL (Right-to-Left) text processing utilities for Arabic Quran text.
  *
- * Based on spike findings (src/tui/spike-bidi.tsx):
- * - Modern terminals handle BiDi reordering natively
- * - Applying bidi-js on top causes double-reversal (broken text)
- * - This module focuses on alignment and width rather than text reordering
- * - bidi-js is kept as a dependency for future use with terminals lacking native BiDi
+ * Uses `arabic-reshaper` to convert standard Arabic characters (U+0600 block)
+ * to Unicode Presentation Forms B (U+FE70 block) which have pre-shaped
+ * contextual forms (initial, medial, final, isolated). This ensures Arabic
+ * letters appear connected even in cell-based terminal renderers like OpenTUI
+ * that place one character per cell.
+ *
+ * The reshaped text is then reversed character-by-character to counteract the
+ * terminal's native BiDi algorithm, which would otherwise re-order the
+ * already-placed characters.
  */
+// @ts-ignore — no type declarations
+import ArabicReshaper from "arabic-reshaper";
 
 /**
- * Process Arabic text for terminal display.
+ * Process Arabic text for terminal display in OpenTUI.
  *
- * Currently a passthrough — the terminal's native BiDi support handles
- * character reordering correctly. If we need to support terminals without
- * native BiDi, this function can be updated to apply bidi-js processing.
+ * 1. Reshapes Arabic characters to Presentation Forms B (connected glyphs)
+ * 2. Reverses the character order to counteract terminal BiDi reordering
+ *
+ * This produces text that looks correctly shaped and ordered when rendered
+ * cell-by-cell by OpenTUI's rendering engine.
  */
 export function processArabicText(text: string): string {
-  // Wrap with RLE (Right-to-Left Embedding) and PDF (Pop Directional Formatting)
-  // This forces the terminal to treat the block as RTL, even if it tries to be smart.
-  return `\u202B${text}\u202C`;
+  const shaped = ArabicReshaper.convertArabic(text) as string;
+  return [...shaped].reverse().join("");
 }
 
 /**
@@ -30,7 +37,6 @@ export function processArabicText(text: string): string {
  * @returns Text padded with leading spaces for right-alignment
  */
 export function alignRTL(text: string, width: number): string {
-  // For terminal rendering, we use visual character width
   const textWidth = getVisualWidth(text);
   if (textWidth >= width) return text;
   return " ".repeat(width - textWidth) + text;
@@ -39,9 +45,36 @@ export function alignRTL(text: string, width: number): string {
 /**
  * Combined function: process Arabic text and prepare for rendering.
  * This is the main export used by reader.tsx.
+ *
+ * @param text - Raw Arabic verse text
+ * @param zoom - Zoom level (0-5). Each level adds one space between base characters,
+ *               making the Arabic text visually wider/larger in the terminal.
  */
-export function renderArabicVerse(text: string): string {
-  return processArabicText(text);
+export function renderArabicVerse(text: string, zoom: number = 0): string {
+  const shaped = processArabicText(text);
+  if (zoom <= 0) return shaped;
+
+  // Add spaces between base characters (skip combining marks so diacritics stay attached)
+  const chars = [...shaped];
+  const result: string[] = [];
+  const spacer = " ".repeat(zoom);
+
+  for (let i = 0; i < chars.length; i++) {
+    result.push(chars[i]!);
+    // Add spacing after this character, but only if:
+    // 1. It's not the last character
+    // 2. The next character is not a combining mark (so marks stay attached)
+    // 3. Current character is not a space
+    if (
+      i < chars.length - 1 &&
+      !isCombiningMark(chars[i + 1]!.codePointAt(0)!) &&
+      chars[i] !== " "
+    ) {
+      result.push(spacer);
+    }
+  }
+
+  return result.join("");
 }
 
 /**
@@ -53,9 +86,7 @@ function getVisualWidth(text: string): number {
   let width = 0;
   for (const char of text) {
     const code = char.codePointAt(0)!;
-    // Combining marks (Arabic tashkeel, etc.) — zero width
     if (isCombiningMark(code)) continue;
-    // Most Arabic base characters are single-width in terminal
     width += 1;
   }
   return width;

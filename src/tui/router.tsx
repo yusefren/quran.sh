@@ -1,16 +1,15 @@
-/** @jsxImportSource @opentui/solid */
-import { createContext, useContext, createSignal, JSX, Component } from "solid-js";
+import { createContext, useContext, useState, type ReactNode, type FC } from "react";
 
 // --- Route Provider ---
 interface RouteContextType {
-  path: () => string;
+  path: string;
   navigate: (path: string) => void;
 }
 
-const RouteContext = createContext<RouteContextType>();
+const RouteContext = createContext<RouteContextType | undefined>(undefined);
 
-export const RouteProvider: Component<{ children: JSX.Element }> = (props) => {
-  const [path, setPath] = createSignal("/");
+export const RouteProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [path, setPath] = useState("/");
 
   const navigate = (newPath: string) => {
     setPath(newPath);
@@ -18,7 +17,7 @@ export const RouteProvider: Component<{ children: JSX.Element }> = (props) => {
 
   return (
     <RouteContext.Provider value={{ path, navigate }}>
-      {props.children}
+      {children}
     </RouteContext.Provider>
   );
 };

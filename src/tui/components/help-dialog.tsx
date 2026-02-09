@@ -1,12 +1,11 @@
-/** @jsxImportSource @opentui/solid */
-import { Component, Show } from "solid-js";
+import { type FC } from "react";
 import { useTheme } from "../theme";
 
 interface HelpDialogProps {
   visible: boolean;
 }
 
-export const HelpDialog: Component<HelpDialogProps> = (props) => {
+export const HelpDialog: FC<HelpDialogProps> = (props) => {
   const { theme } = useTheme();
 
   const shortcuts = [
@@ -32,48 +31,48 @@ export const HelpDialog: Component<HelpDialogProps> = (props) => {
     { key: "q", desc: "Quit application" },
   ];
 
+  if (!props.visible) return null;
+
   return (
-    <Show when={props.visible}>
-      <box
-        position="absolute"
-        top="10%"
-        left="15%"
-        width="70%"
-        height="80%"
-        borderStyle={theme().borderStyleFocused}
-        borderColor={theme().colors.header}
-        flexDirection="column"
-        padding={1}
-        zIndex={100}
-        backgroundColor={theme().colors.background}
-        title={` ${theme().ornaments.focusIcon} Help `}
-        titleAlignment="center"
-      >
-        <box justifyContent="center" marginBottom={1}>
-          <text color={theme().colors.highlight} bold>
-            {`${theme().ornaments.headerLeft} quran.sh Keyboard Shortcuts ${theme().ornaments.headerRight}`}
-          </text>
-        </box>
-
-        <box flexDirection="column" flexGrow={1}>
-          {shortcuts.map((s) => (
-            <box marginBottom={0}>
-              <text color={theme().colors.secondary} bold width={15}>
-                {s.key}
-              </text>
-              <text color={theme().colors.text}>
-                {s.desc}
-              </text>
-            </box>
-          ))}
-        </box>
-
-        <box justifyContent="center" marginTop={1}>
-          <text color={theme().colors.muted}>
-            {`Theme: ${theme().name} (${theme().era}) ${theme().ornaments.sectionMarker} Press T to change`}
-          </text>
-        </box>
+    <box
+      position="absolute"
+      top="10%"
+      left="15%"
+      width="70%"
+      height="80%"
+      borderStyle={theme.borderStyleFocused}
+      borderColor={theme.colors.header}
+      flexDirection="column"
+      padding={1}
+      zIndex={100}
+      backgroundColor={theme.colors.background}
+      title={` ${theme.ornaments.focusIcon} Help `}
+      titleAlignment="center"
+    >
+      <box justifyContent="center" marginBottom={1}>
+        <text color={theme.colors.highlight} bold>
+          {`${theme.ornaments.headerLeft} quran.sh Keyboard Shortcuts ${theme.ornaments.headerRight}`}
+        </text>
       </box>
-    </Show>
+
+      <box flexDirection="column" flexGrow={1}>
+        {shortcuts.map((s) => (
+          <box key={s.key} marginBottom={0}>
+            <text color={theme.colors.secondary} bold width={15}>
+              {s.key}
+            </text>
+            <text color={theme.colors.text}>
+              {s.desc}
+            </text>
+          </box>
+        ))}
+      </box>
+
+      <box justifyContent="center" marginTop={1}>
+        <text color={theme.colors.muted}>
+          {`Theme: ${theme.name} (${theme.era}) ${theme.ornaments.sectionMarker} Press T to change`}
+        </text>
+      </box>
+    </box>
   );
 };

@@ -1,5 +1,4 @@
-/** @jsxImportSource @opentui/solid */
-import { createContext, useContext, createSignal, createMemo, JSX, Component } from "solid-js";
+import { createContext, useContext, useState, useMemo, type ReactNode, type FC } from "react";
 import type { BorderStyle } from "@opentui/core";
 import { getPreference, setPreference } from "../data/preferences.ts";
 import { useMode } from "./mode";
@@ -8,7 +7,7 @@ import { useMode } from "./mode";
 // Theme interface — each dynasty defines colors, border style & ornaments
 // ---------------------------------------------------------------------------
 
-import { BorderCharacters } from "@opentui/core";
+import type { BorderCharacters } from "@opentui/core";
 
 export interface ThemeOrnaments {
   /** Character placed before the currently-focused verse */
@@ -168,6 +167,7 @@ export const mamlukTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25A0",
     focusIcon: "\u25C6",
+    scrollbarThumb: "\u25A0",
   },
   colors: {
     primary: "#1E3A8A",        // Lapis lazuli blue
@@ -255,6 +255,7 @@ export const safavidTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u2727",
     focusIcon: "\u2756",
+    scrollbarThumb: "\u2727",
   },
   colors: {
     primary: "#4169E1",        // Cloud-band royal blue
@@ -342,6 +343,7 @@ export const maghribiTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25AA",
     focusIcon: "\u25C6",
+    scrollbarThumb: "\u2734",
   },
   colors: {
     primary: "#003366",        // Moroccan indigo blue
@@ -471,6 +473,7 @@ export const abbasidTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25A0",
     focusIcon: "\u25C6",
+    scrollbarThumb: "\u2593",
   },
   colors: {
     primary: "#1A237E",        // Deep lapis lazuli
@@ -558,6 +561,7 @@ export const seljukTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u25AA",
     focusIcon: "\u25C6",
+    scrollbarThumb: "\u25AA",
   },
   colors: {
     primary: "#00838F",        // Deep turquoise
@@ -601,6 +605,7 @@ export const mughalTheme: Theme = {
     sectionMarker: "\u06DE",
     bullet: "\u2727",
     focusIcon: "\u2756",
+    scrollbarThumb: "\u2727",
   },
   colors: {
     primary: "#8B0000",        // Deep Mughal red
@@ -649,14 +654,14 @@ export const defaultTheme = madinahTheme;
 // ---------------------------------------------------------------------------
 
 interface ThemeContextType {
-  theme: () => Theme;
+  theme: Theme;
   setTheme: (theme: Theme) => void;
   cycleTheme: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>();
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: Component<{ children: JSX.Element }> = (props) => {
+export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { resolvedMode } = useMode();
   
   // Synchronously load saved theme preference before signal creation (no flash)
@@ -671,28 +676,25 @@ export const ThemeProvider: Component<{ children: JSX.Element }> = (props) => {
     // DB may not be available (tests, first run, etc.)
   }
 
-  const [rawTheme, setTheme] = createSignal<Theme>(initialTheme);
+  const [rawTheme, setRawTheme] = useState<Theme>(initialTheme);
 
-  const theme = createMemo(() => {
-    const t = rawTheme();
-    const mode = resolvedMode();
+  const theme = useMemo(() => {
     return {
-      ...t,
-      colors: mode === "dark" ? t.colors : t.lightColors,
+      ...rawTheme,
+      colors: resolvedMode === "dark" ? rawTheme.colors : rawTheme.lightColors,
     };
-  });
+  }, [rawTheme, resolvedMode]);
 
   const cycleTheme = () => {
-    const current = rawTheme();
-    const idx = THEMES.findIndex((t) => t.id === current.id);
+    const idx = THEMES.findIndex((t) => t.id === rawTheme.id);
     const next = THEMES[(idx + 1) % THEMES.length] ?? THEMES[0]!;
-    setTheme(next);
+    setRawTheme(next);
     try { setPreference("theme", next.id); } catch { /* DB may not be available */ }
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: (t: Theme) => setTheme(t), cycleTheme }}>
-      {props.children}
+    <ThemeContext.Provider value={{ theme, setTheme: (t: Theme) => setRawTheme(t), cycleTheme }}>
+      {children}
     </ThemeContext.Provider>
   );
 };

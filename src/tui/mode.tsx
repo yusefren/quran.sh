@@ -1,17 +1,16 @@
-/** @jsxImportSource @opentui/solid */
-import { createContext, useContext, createSignal, createMemo, onMount, JSX, Component } from "solid-js";
+import { createContext, useContext, useState, useMemo, useEffect, type ReactNode, type FC } from "react";
 import { getPreference, setPreference } from "../data/preferences.ts";
 
 export type ColorMode = "dark" | "light" | "auto";
 
 interface ModeContextType {
-  mode: () => ColorMode;
-  resolvedMode: () => "dark" | "light";
+  mode: ColorMode;
+  resolvedMode: "dark" | "light";
   setMode: (m: ColorMode) => void;
   cycleMode: () => void;
 }
 
-const ModeContext = createContext<ModeContextType>();
+const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
 /**
  * Auto-detect terminal color scheme using COLORFGBG environment variable.
@@ -24,7 +23,7 @@ function detectTerminalMode(): "dark" | "light" {
   try {
     const parts = colorfgbg.split(";");
     if (parts.length < 2) return "dark";
-    const bg = parseInt(parts[1], 10);
+    const bg = parseInt(parts[1]!, 10);
     // Standard xterm-256color: colors 0-6 are dark, 7-15 vary but usually 7 is light gray, 15 white.
     // Simple heuristic: bg > 6 is likely a light background terminal.
     return bg > 6 ? "light" : "dark";
@@ -33,20 +32,19 @@ function detectTerminalMode(): "dark" | "light" {
   }
 }
 
-export const ModeProvider: Component<{ children: JSX.Element }> = (props) => {
+export const ModeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const initialMode = (getPreference("color_mode") as ColorMode) || "auto";
-  const [mode, setModeInternal] = createSignal<ColorMode>(initialMode);
-  const [detectedMode, setDetectedMode] = createSignal<"dark" | "light">("dark");
+  const [mode, setModeInternal] = useState<ColorMode>(initialMode);
+  const [detectedMode, setDetectedMode] = useState<"dark" | "light">("dark");
 
-  onMount(() => {
+  useEffect(() => {
     setDetectedMode(detectTerminalMode());
-  });
+  }, []);
 
-  const resolvedMode = createMemo(() => {
-    const m = mode();
-    if (m === "auto") return detectedMode();
-    return m;
-  });
+  const resolvedMode = useMemo(() => {
+    if (mode === "auto") return detectedMode;
+    return mode;
+  }, [mode, detectedMode]);
 
   const setMode = (m: ColorMode) => {
     setModeInternal(m);
@@ -54,15 +52,14 @@ export const ModeProvider: Component<{ children: JSX.Element }> = (props) => {
   };
 
   const cycleMode = () => {
-    const current = mode();
-    if (current === "auto") setMode("dark");
-    else if (current === "dark") setMode("light");
+    if (mode === "auto") setMode("dark");
+    else if (mode === "dark") setMode("light");
     else setMode("auto");
   };
 
   return (
     <ModeContext.Provider value={{ mode, resolvedMode, setMode, cycleMode }}>
-      {props.children}
+      {children}
     </ModeContext.Provider>
   );
 };

@@ -6,7 +6,8 @@ import { getSurah, getVerse, search, TOTAL_SURAHS } from "./data/quran.ts";
 import type { Surah, VerseRef } from "./data/quran.ts";
 import { logVerse, logSurah } from "./data/log.ts";
 import { getReadingStats } from "./data/streaks.ts";
-import { render } from "@opentui/solid";
+import { createRoot, createElement } from "@opentui/react";
+import { ConsolePosition, createCliRenderer } from "@opentui/core";
 import App from "./tui/app.tsx";
 
 // ---------------------------------------------------------------------------
@@ -157,7 +158,18 @@ async function main() {
 
   if (!command) {
     // Launch TUI
-    render(() => App({}));
+    const renderer = await createCliRenderer({
+      consoleOptions: {
+        position: ConsolePosition.BOTTOM, // Position on screen
+        sizePercent: 30, // Size as percentage of terminal
+        colorInfo: "#00FFFF", // Color for console.info
+        colorWarn: "#FFFF00", // Color for console.warn
+        colorError: "#FF0000", // Color for console.error
+        startInDebugMode: false, // Show file/line info in logs
+      },
+    });
+    // renderer.console.toggle()
+    createRoot(renderer).render(createElement(App));
     return;
   }
 

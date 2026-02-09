@@ -1,32 +1,35 @@
 import { describe, expect, test } from "bun:test";
-import { testRender } from "@opentui/solid";
+import { testRender } from "@opentui/react/test-utils";
 import { Reader } from "../../src/tui/components/reader";
 import { ThemeProvider } from "../../src/tui/theme";
 import { ModeProvider } from "../../src/tui/mode";
 
 describe("Multi-View Reader", () => {
   test("renders Arabic by default (or when enabled)", async () => {
-    const { captureSpans, renderOnce } = await testRender(() => (
+    const { captureSpans, renderOnce } = await testRender(
       <ModeProvider><ThemeProvider>
         <Reader surahId={1} focused={true} showArabic={true} />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     const output = captureSpans().lines
       .map((line) => line.spans.map((s) => s.text).join(""))
       .join("\n");
 
-    // Check for Arabic Bismillah (partial match — right-alignment may truncate in narrow viewport)
-    expect(output).toContain("بِسۡمِ");
+    // Reshaping produces Arabic Presentation Forms B chars (U+FE70–U+FEFF).
+    // Match any PFB character to confirm reshaping is active.
+    expect(output).toMatch(/[\uFE70-\uFEFF]/);
   });
 
   test("hides Arabic when disabled", async () => {
-    const { captureSpans, renderOnce } = await testRender(() => (
+    const { captureSpans, renderOnce } = await testRender(
       <ModeProvider><ThemeProvider>
         <Reader surahId={1} focused={true} showArabic={false} />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     const output = captureSpans().lines
@@ -34,17 +37,18 @@ describe("Multi-View Reader", () => {
       .join("\n");
 
     // Should NOT contain Arabic Bismillah
-    expect(output).not.toContain("بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ");
+    expect(output).not.toContain("بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ");
     // Should still contain translation
     expect(output).toContain("In the name of Allah");
   });
 
   test("shows transliteration when enabled", async () => {
-    const { captureSpans, renderOnce } = await testRender(() => (
+    const { captureSpans, renderOnce } = await testRender(
       <ModeProvider><ThemeProvider>
         <Reader surahId={1} focused={true} showTransliteration={true} />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     const output = captureSpans().lines
@@ -56,11 +60,12 @@ describe("Multi-View Reader", () => {
   });
 
   test("switches language to French", async () => {
-    const { captureSpans, renderOnce } = await testRender(() => (
+    const { captureSpans, renderOnce } = await testRender(
       <ModeProvider><ThemeProvider>
         <Reader surahId={1} focused={true} language="fr" />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     const output = captureSpans().lines

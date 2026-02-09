@@ -1,16 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { testRender } from "@opentui/solid";
+import { testRender } from "@opentui/react/test-utils";
 import { Reader } from "../../src/tui/components/reader";
 import { ThemeProvider } from "../../src/tui/theme";
 import { ModeProvider } from "../../src/tui/mode";
 
 describe("Reader", () => {
   test("renders the verses of a surah", async () => {
-    const { captureSpans, renderOnce, mockInput } = await testRender(() => (
+    const { captureSpans, renderOnce, mockInput } = await testRender(
       <ModeProvider><ThemeProvider>
         <Reader surahId={1} focusedPane="arabic" />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     let frame = captureSpans();
@@ -46,11 +47,12 @@ describe("Reader", () => {
 
   test("handles surah change", async () => {
     // Render Surah 114 (An-Nas)
-    const { captureSpans, renderOnce } = await testRender(() => (
+    const { captureSpans, renderOnce } = await testRender(
       <ModeProvider><ThemeProvider>
         <Reader surahId={114} focusedPane="arabic" />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     const frame = captureSpans();
@@ -65,11 +67,12 @@ describe("Reader", () => {
   });
 
   test("displays error for invalid surah", async () => {
-    const { captureSpans, renderOnce } = await testRender(() => (
+    const { captureSpans, renderOnce } = await testRender(
       <ModeProvider><ThemeProvider>
         <Reader surahId={999} focusedPane="arabic" />
-      </ThemeProvider></ModeProvider>
-    ));
+      </ThemeProvider></ModeProvider>,
+      {}
+    );
     await renderOnce();
 
     const frame = captureSpans();

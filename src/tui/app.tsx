@@ -1,6 +1,5 @@
-/** @jsxImportSource @opentui/solid */
-import { render, useKeyboard } from "@opentui/solid";
-import { createSignal, onMount, onCleanup, Component, Show, createEffect } from "solid-js";
+import { useKeyboard } from "@opentui/react";
+import { useState, useEffect, useCallback, useRef, type FC } from "react";
 import { Layout } from "./components/layout";
 import { RouteProvider } from "./router";
 import { SurahList } from "./components/surah-list";
@@ -29,48 +28,108 @@ export type { Theme };
 
 export type FocusablePane = "sidebar" | "arabic" | "translation" | "transliteration" | "panel";
 
-const AppContent: Component = () => {
+const AppContent: FC = () => {
   const { cycleTheme } = useTheme();
   const { cycleMode } = useMode();
 
-  const [selectedSurahId, setSelectedSurahId] = createSignal(1);
-  const [focusedPanel, setFocusedPanel] = createSignal<FocusablePane>("sidebar");
-  const [currentVerseId, setCurrentVerseId] = createSignal(1);
-  const [bookmarkedAyahs, setBookmarkedAyahs] = createSignal<Set<number>>(new Set());
-  const [isSearchMode, setIsSearchMode] = createSignal(false);
-  const [searchInput, setSearchInput] = createSignal("");
-  const [searchResults, setSearchResults] = createSignal<VerseRef[]>([]);
-  const [searchQuery, setSearchQuery] = createSignal("");
-  const [showHelp, setShowHelp] = createSignal(false);
-  const [showSidebar, setShowSidebar] = createSignal(true);
-  const [showPanel, setShowPanel] = createSignal(false);
-  const [showPalette, setShowPalette] = createSignal(false);
-  const [paletteIndex, setPaletteIndex] = createSignal(0);
-  const [showReflectionDialog, setShowReflectionDialog] = createSignal(false);
-  const [reflectionInput, setReflectionInput] = createSignal("");
-  const [verseSpacing, setVerseSpacing] = createSignal(1);
+  const [selectedSurahId, setSelectedSurahId] = useState(1);
+  const [focusedPanel, setFocusedPanel] = useState<FocusablePane>("sidebar");
+  const [currentVerseId, setCurrentVerseId] = useState(1);
+  const [bookmarkedAyahs, setBookmarkedAyahs] = useState<Set<number>>(new Set());
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchResults, setSearchResults] = useState<VerseRef[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [showPanel, setShowPanel] = useState(false);
+  const [showPalette, setShowPalette] = useState(false);
+  const [paletteIndex, setPaletteIndex] = useState(0);
+  const [showReflectionDialog, setShowReflectionDialog] = useState(false);
+  const [reflectionInput, setReflectionInput] = useState("");
+  const [arabicZoom, setArabicZoom] = useState(0);
 
-  const [showArabic, setShowArabic] = createSignal(true);
-  const [showTranslation, setShowTranslation] = createSignal(true);
-  const [showTransliteration, setShowTransliteration] = createSignal(false);
-  const [language, setLanguage] = createSignal("en");
-  const [flashMessage, setFlashMessage] = createSignal("");
+  const [showArabic, setShowArabic] = useState(true);
+  const [showTranslation, setShowTranslation] = useState(true);
+  const [showTransliteration, setShowTransliteration] = useState(false);
+  const [language, setLanguage] = useState("en");
+  const [flashMessage, setFlashMessage] = useState("");
 
-  const showFlash = (msg: string) => {
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showFlash = useCallback((msg: string) => {
     setFlashMessage(msg);
-    setTimeout(() => setFlashMessage(""), 2000);
-  };
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    flashTimerRef.current = setTimeout(() => setFlashMessage(""), 2000);
+  }, []);
 
-  const [panelTab, setPanelTab] = createSignal<PanelTab>("bookmarks");
-  const [panelIndex, setPanelIndex] = createSignal(0);
-  const [allBookmarks, setAllBookmarks] = createSignal<Bookmark[]>([]);
-  const [allCues, setAllCues] = createSignal<Cue[]>([]);
-  const [allReflections, setAllReflections] = createSignal<Reflection[]>([]);
+  // Cleanup flash timer on unmount
+  useEffect(() => {
+    return () => {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    };
+  }, []);
+
+  const [panelTab, setPanelTab] = useState<PanelTab>("bookmarks");
+  const [panelIndex, setPanelIndex] = useState(0);
+  const [allBookmarks, setAllBookmarks] = useState<Bookmark[]>([]);
+  const [allCues, setAllCues] = useState<Cue[]>([]);
+  const [allReflections, setAllReflections] = useState<Reflection[]>([]);
 
   // Command palette: actionable items with their labels and actions
   interface PaletteCommand extends CommandItem {
     action: () => void;
   }
+
+  const refreshBookmarks = useCallback(() => {
+    try {
+      setBookmarkedAyahs(getBookmarkedAyahs(selectedSurahId));
+      setAllBookmarks(getAllBookmarks());
+    } catch {
+      // DB may not be available in tests
+    }
+  }, [selectedSurahId]);
+
+  const refreshPanelData = useCallback(() => {
+    try {
+      setAllBookmarks(getAllBookmarks());
+      setAllCues(getAllCues());
+      setAllReflections(getAllReflections());
+    } catch { /* DB */ }
+  }, []);
+
+  const isReaderPane = (p: FocusablePane) => p === "arabic" || p === "translation" || p === "transliteration";
+
+  const cycleFocus = useCallback(() => {
+    const panes: FocusablePane[] = [];
+    if (showSidebar) panes.push("sidebar");
+    panes.push("arabic");
+    if (showTranslation) panes.push("translation");
+    if (showTransliteration) panes.push("transliteration");
+    if (showPanel) panes.push("panel");
+
+    const idx = panes.indexOf(focusedPanel);
+    const next = panes[(idx + 1) % panes.length]!;
+    setFocusedPanel(next);
+  }, [showSidebar, showTranslation, showTransliteration, showPanel, focusedPanel]);
+
+  // True when any modal/overlay is open — used to disable focus on child components
+  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode;
+
+  // We use refs to access latest state inside the keyboard handler
+  // (avoids stale closures without needing to list every state var as dep)
+  const stateRef = useRef({
+    selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
+    searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
+    showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
+    language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
+  });
+  stateRef.current = {
+    selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
+    searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
+    showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
+    language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
+  };
 
   const paletteCommands: PaletteCommand[] = [
     { key: "a", label: "Toggle Arabic", description: "Show/hide Arabic pane", action: () => setShowArabic((prev) => !prev) },
@@ -81,8 +140,9 @@ const AppContent: Component = () => {
       label: "Cycle Language",
       description: "Switch translation language",
       action: () => {
-        const idx = LANGUAGES.indexOf(language() as any);
-        if (idx !== -1) setLanguage(LANGUAGES[(idx + 1) % LANGUAGES.length]);
+        const s = stateRef.current;
+        const idx = LANGUAGES.indexOf(s.language as any);
+        if (idx !== -1) setLanguage(LANGUAGES[(idx + 1) % LANGUAGES.length]!);
       },
     },
     { key: "D", label: "Cycle Mode", description: "Switch light/dark mode", action: () => cycleMode() },
@@ -92,9 +152,10 @@ const AppContent: Component = () => {
       label: "Toggle Sidebar",
       description: "Show/hide surah sidebar",
       action: () => {
-        const wasVisible = showSidebar();
+        const s = stateRef.current;
+        const wasVisible = s.showSidebar;
         setShowSidebar((prev) => !prev);
-        if (wasVisible && focusedPanel() === "sidebar") setFocusedPanel("arabic");
+        if (wasVisible && s.focusedPanel === "sidebar") setFocusedPanel("arabic");
         if (!wasVisible) setFocusedPanel("sidebar");
       },
     },
@@ -103,29 +164,29 @@ const AppContent: Component = () => {
       label: "Toggle Panel",
       description: "Show/hide activity panel",
       action: () => {
-        const wasVisible = showPanel();
+        const s = stateRef.current;
+        const wasVisible = s.showPanel;
         setShowPanel((prev) => !prev);
-        if (wasVisible && focusedPanel() === "panel") setFocusedPanel("arabic");
+        if (wasVisible && s.focusedPanel === "panel") setFocusedPanel("arabic");
         if (!wasVisible) {
           refreshPanelData();
           setFocusedPanel("panel");
         }
       },
     },
-    { key: "+", label: "Increase Spacing", description: "Increase verse spacing", action: () => setVerseSpacing((prev) => Math.min(prev + 1, 5)) },
-    { key: "-", label: "Decrease Spacing", description: "Decrease verse spacing", action: () => setVerseSpacing((prev) => Math.max(prev - 1, 0)) },
+    { key: "+", label: "Zoom In Arabic", description: "Increase Arabic text size", action: () => setArabicZoom((prev) => Math.min(prev + 1, 5)) },
+    { key: "-", label: "Zoom Out Arabic", description: "Decrease Arabic text size", action: () => setArabicZoom((prev) => Math.max(prev - 1, 0)) },
     {
       key: "b",
       label: "Toggle Bookmark",
       description: "Bookmark current verse",
       action: () => {
-        const surahId = selectedSurahId();
-        const ayahId = currentVerseId();
-        const verseRef = `${surahId}:${ayahId}`;
+        const s = stateRef.current;
+        const verseRef = `${s.selectedSurahId}:${s.currentVerseId}`;
         try {
-          toggleBookmark(surahId, ayahId, verseRef);
+          toggleBookmark(s.selectedSurahId, s.currentVerseId, verseRef);
           refreshBookmarks();
-          if (showPanel()) refreshPanelData();
+          if (s.showPanel) refreshPanelData();
         } catch {
           /* DB may not be available */
         }
@@ -136,10 +197,9 @@ const AppContent: Component = () => {
       label: "Add Reflection",
       description: "Add/edit reflection for current verse",
       action: () => {
-        const surahId = selectedSurahId();
-        const ayahId = currentVerseId();
+        const s = stateRef.current;
         try {
-          const existing = getReflection(surahId, ayahId);
+          const existing = getReflection(s.selectedSurahId, s.currentVerseId);
           setReflectionInput(existing ? existing.note : "");
           setShowReflectionDialog(true);
         } catch {
@@ -162,40 +222,8 @@ const AppContent: Component = () => {
     { key: "q", label: "Quit", description: "Exit application", action: () => process.exit(0) },
   ];
 
-  const refreshBookmarks = () => {
-    try {
-      setBookmarkedAyahs(getBookmarkedAyahs(selectedSurahId()));
-      setAllBookmarks(getAllBookmarks());
-    } catch {
-      // DB may not be available in tests
-    }
-  };
-
-  const refreshPanelData = () => {
-    try {
-      setAllBookmarks(getAllBookmarks());
-      setAllCues(getAllCues());
-      setAllReflections(getAllReflections());
-    } catch { /* DB */ }
-  };
-
-  const isReaderPane = (p: FocusablePane) => p === "arabic" || p === "translation" || p === "transliteration";
-
-  const cycleFocus = () => {
-    const panes: FocusablePane[] = [];
-    if (showSidebar()) panes.push("sidebar");
-    panes.push("arabic");
-    if (showTranslation()) panes.push("translation");
-    if (showTransliteration()) panes.push("transliteration");
-    if (showPanel()) panes.push("panel");
-
-    const current = focusedPanel();
-    const idx = panes.indexOf(current);
-    const next = panes[(idx + 1) % panes.length];
-    setFocusedPanel(next);
-  };
-
   useKeyboard((key) => {
+    const s = stateRef.current;
     // Ctrl+P: toggle command palette
     if (key.ctrl && key.name === "p") {
       setShowPalette((prev) => !prev);
@@ -205,7 +233,7 @@ const AppContent: Component = () => {
 
     const str = key.sequence || key.name;
 
-    if (showPalette()) {
+    if (s.showPalette) {
       if (key.name === "escape") {
         setShowPalette(false);
         return;
@@ -219,7 +247,7 @@ const AppContent: Component = () => {
         return;
       }
       if (key.name === "return") {
-        const cmd = paletteCommands[paletteIndex()];
+        const cmd = paletteCommands[s.paletteIndex];
         if (cmd) {
           cmd.action();
           setShowPalette(false);
@@ -229,17 +257,15 @@ const AppContent: Component = () => {
       return;
     }
 
-    if (showReflectionDialog()) {
+    if (s.showReflectionDialog) {
       if (key.name === "escape") {
         setShowReflectionDialog(false);
         return;
       }
       if (key.name === "return") {
-        const surahId = selectedSurahId();
-        const ayahId = currentVerseId();
-        const verseRef = `${surahId}:${ayahId}`;
+        const verseRef = `${s.selectedSurahId}:${s.currentVerseId}`;
         try {
-          addReflection(surahId, ayahId, verseRef, reflectionInput());
+          addReflection(s.selectedSurahId, s.currentVerseId, verseRef, s.reflectionInput);
           setShowReflectionDialog(false);
           refreshPanelData();
           showFlash("Reflection saved");
@@ -259,14 +285,14 @@ const AppContent: Component = () => {
       return;
     }
 
-    if (showHelp()) {
+    if (s.showHelp) {
       if (key.name === 'escape' || key.name === 'q' || str === '?') {
         setShowHelp(false);
       }
       return;
     }
 
-    if (isSearchMode()) {
+    if (s.isSearchMode) {
       if (key.name === 'escape') {
         setIsSearchMode(false);
         setSearchInput("");
@@ -275,7 +301,7 @@ const AppContent: Component = () => {
         return;
       }
       if (key.name === 'return') {
-        const query = searchInput();
+        const query = s.searchInput;
         if (query.trim().length > 0) {
           const results = search(query);
           setSearchResults(results);
@@ -295,29 +321,42 @@ const AppContent: Component = () => {
       return;
     }
 
-    if (key.name === 'q') {
+    // --- Beyond this point: global shortcuts ---
+    // When sidebar is focused, skip single-char shortcuts so SurahList
+    // can use them for its own search/filtering.
+    const sidebarActive = s.focusedPanel === "sidebar";
+
+    if (key.name === 'q' && !sidebarActive) {
       process.exit(0);
     }
 
-    if (str === '?') {
+    if (str === '?' && !sidebarActive) {
       setShowHelp(true);
       return;
     }
 
-    if (focusedPanel() === "panel") {
+    // When sidebar is focused, only allow Tab and Ctrl+P — skip everything else
+    if (sidebarActive) {
+      if (key.name === 'tab') {
+        cycleFocus();
+      }
+      return;
+    }
+
+    if (s.focusedPanel === "panel") {
       const tabs: PanelTab[] = ["bookmarks", "cues", "reflections"];
-      const items = panelTab() === "bookmarks" ? allBookmarks() :
-                    panelTab() === "cues" ? allCues() : allReflections();
+      const items = s.panelTab === "bookmarks" ? s.allBookmarks :
+                    s.panelTab === "cues" ? s.allCues : s.allReflections;
 
       if (key.name === "left" || str === "h") {
-        const idx = tabs.indexOf(panelTab());
-        setPanelTab(tabs[(idx - 1 + tabs.length) % tabs.length]);
+        const idx = tabs.indexOf(s.panelTab);
+        setPanelTab(tabs[(idx - 1 + tabs.length) % tabs.length]!);
         setPanelIndex(0);
         return;
       }
       if (key.name === "right" || str === "l") {
-        const idx = tabs.indexOf(panelTab());
-        setPanelTab(tabs[(idx + 1) % tabs.length]);
+        const idx = tabs.indexOf(s.panelTab);
+        setPanelTab(tabs[(idx + 1) % tabs.length]!);
         setPanelIndex(0);
         return;
       }
@@ -330,13 +369,13 @@ const AppContent: Component = () => {
         return;
       }
       if (key.name === "return") {
-        const item = items[panelIndex()];
+        const item = items[s.panelIndex];
         if (item) {
           setSelectedSurahId(item.surah);
           setCurrentVerseId(item.ayah);
           refreshBookmarks();
 
-          if (panelTab() === "reflections") {
+          if (s.panelTab === "reflections") {
             setReflectionInput((item as Reflection).note);
             setShowReflectionDialog(true);
           }
@@ -344,11 +383,6 @@ const AppContent: Component = () => {
         return;
       }
     }
-
-    // Sidebar navigation handled by SurahList component mostly, but we can add global shortcuts if needed.
-    // However, if sidebar is focused, SurahList should handle it.
-    // Wait, SurahList uses <select> which handles its own keys.
-    // We should only handle global keys here.
 
     if (str === 'a') {
       setShowArabic(prev => !prev);
@@ -363,9 +397,9 @@ const AppContent: Component = () => {
       return;
     }
     if (str === 'l') {
-      const idx = LANGUAGES.indexOf(language() as any);
+      const idx = LANGUAGES.indexOf(s.language as any);
       if (idx !== -1) {
-        const next = LANGUAGES[(idx + 1) % LANGUAGES.length];
+        const next = LANGUAGES[(idx + 1) % LANGUAGES.length]!;
         setLanguage(next);
       }
       return;
@@ -382,9 +416,9 @@ const AppContent: Component = () => {
     }
 
     if (str === 's') {
-      const wasVisible = showSidebar();
+      const wasVisible = s.showSidebar;
       setShowSidebar(prev => !prev);
-      if (wasVisible && focusedPanel() === "sidebar") {
+      if (wasVisible && s.focusedPanel === "sidebar") {
         setFocusedPanel("arabic");
       }
       if (!wasVisible) {
@@ -394,9 +428,9 @@ const AppContent: Component = () => {
     }
 
     if (str === 'B') {
-      const wasVisible = showPanel();
+      const wasVisible = s.showPanel;
       setShowPanel(prev => !prev);
-      if (wasVisible && focusedPanel() === "panel") {
+      if (wasVisible && s.focusedPanel === "panel") {
         setFocusedPanel("arabic");
       }
       if (!wasVisible) {
@@ -407,10 +441,8 @@ const AppContent: Component = () => {
     }
 
     if (str === "R") {
-      const surahId = selectedSurahId();
-      const ayahId = currentVerseId();
       try {
-        const existing = getReflection(surahId, ayahId);
+        const existing = getReflection(s.selectedSurahId, s.currentVerseId);
         setReflectionInput(existing ? existing.note : "");
         setShowReflectionDialog(true);
       } catch {
@@ -420,11 +452,11 @@ const AppContent: Component = () => {
     }
 
     if (str === '+' || str === '=') {
-      setVerseSpacing(prev => Math.min(prev + 1, 5));
+      setArabicZoom(prev => Math.min(prev + 1, 5));
       return;
     }
     if (str === '-') {
-      setVerseSpacing(prev => Math.max(prev - 1, 0));
+      setArabicZoom(prev => Math.max(prev - 1, 0));
       return;
     }
 
@@ -441,33 +473,31 @@ const AppContent: Component = () => {
     }
 
     if (key.name === 'escape') {
-      if (searchResults().length > 0) {
+      if (s.searchResults.length > 0) {
         setSearchResults([]);
         setSearchQuery("");
       }
       return;
     }
 
-    if (isReaderPane(focusedPanel())) {
+    if (isReaderPane(s.focusedPanel)) {
       const cueSetSymbols: Record<string, number> = {
         '!': 1, '@': 2, '#': 3, '$': 4, '%': 5, '^': 6, '&': 7, '*': 8, '(': 9
       };
       const cueJumpKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-      if (cueSetSymbols[str]) {
-        const slot = cueSetSymbols[str];
-        const surahId = selectedSurahId();
-        const ayahId = currentVerseId();
-        const verseRef = `${surahId}:${ayahId}`;
+      if (str && cueSetSymbols[str]) {
+        const slot = cueSetSymbols[str]!;
+        const verseRef = `${s.selectedSurahId}:${s.currentVerseId}`;
         try {
-          setCue(slot, surahId, ayahId, verseRef);
+          setCue(slot, s.selectedSurahId, s.currentVerseId, verseRef);
           showFlash(`Cue ${slot} set \u2192 ${verseRef}`);
-          if (showPanel()) refreshPanelData();
+          if (s.showPanel) refreshPanelData();
         } catch { /* DB */ }
         return;
       }
 
-      if (cueJumpKeys.includes(str)) {
+      if (str && cueJumpKeys.includes(str)) {
         const slot = parseInt(str, 10);
         try {
           const cue = getCue(slot);
@@ -482,24 +512,22 @@ const AppContent: Component = () => {
       }
 
       if (str === 'j' || key.name === 'down') {
-        const surah = getSurah(selectedSurahId());
-        if (surah && currentVerseId() < surah.totalVerses) {
+        const surah = getSurah(s.selectedSurahId);
+        if (surah && s.currentVerseId < surah.totalVerses) {
           setCurrentVerseId(prev => prev + 1);
         }
       }
       if (str === 'k' || key.name === 'up') {
-        if (currentVerseId() > 1) {
+        if (s.currentVerseId > 1) {
           setCurrentVerseId(prev => prev - 1);
         }
       }
       if (str === 'b') {
-        const surahId = selectedSurahId();
-        const ayahId = currentVerseId();
-        const verseRef = `${surahId}:${ayahId}`;
+        const verseRef = `${s.selectedSurahId}:${s.currentVerseId}`;
         try {
-          toggleBookmark(surahId, ayahId, verseRef);
+          toggleBookmark(s.selectedSurahId, s.currentVerseId, verseRef);
           refreshBookmarks();
-          if (showPanel()) refreshPanelData();
+          if (s.showPanel) refreshPanelData();
         } catch {
           // DB may not be available
         }
@@ -510,18 +538,20 @@ const AppContent: Component = () => {
     }
   });
 
-  onMount(() => {
+  useEffect(() => {
     refreshBookmarks();
     refreshPanelData();
-  });
+  }, []);
+
+  const { theme } = useTheme();
 
   return (
     <RouteProvider>
       <Layout
-        showSidebar={showSidebar()}
-        showPanel={showPanel()}
-        sidebarFocused={focusedPanel() === "sidebar"}
-        panelFocused={focusedPanel() === "panel"}
+        showSidebar={showSidebar}
+        showPanel={showPanel}
+        sidebarFocused={focusedPanel === "sidebar"}
+        panelFocused={focusedPanel === "panel"}
         sidebar={
           <box flexDirection="column" height="100%">
             <box height="25%">
@@ -538,64 +568,64 @@ const AppContent: Component = () => {
                     // DB may not be available
                   }
                 }}
-                initialSelectedId={selectedSurahId()}
-                focused={focusedPanel() === "sidebar"}
+                initialSelectedId={selectedSurahId}
+                focused={focusedPanel === "sidebar"}
+                disabled={anyModalOpen}
               />
             </box>
           </box>
         }
         panel={
           <Panel
-            bookmarks={allBookmarks()}
-            cues={allCues()}
-            reflections={allReflections()}
-            activeTab={panelTab()}
-            selectedIndex={panelIndex()}
-            focused={focusedPanel() === "panel"}
+            bookmarks={allBookmarks}
+            cues={allCues}
+            reflections={allReflections}
+            activeTab={panelTab}
+            selectedIndex={panelIndex}
+            focused={focusedPanel === "panel"}
           />
         }
       >
         <Reader
-          surahId={selectedSurahId()}
-          focusedPane={focusedPanel()}
-          currentVerseId={currentVerseId()}
-          bookmarkedAyahs={bookmarkedAyahs()}
-          searchResults={searchResults()}
-          searchQuery={searchQuery()}
-          isSearchMode={isSearchMode()}
-          searchInput={searchInput()}
-          showArabic={showArabic()}
-          showTranslation={showTranslation()}
-          showTransliteration={showTransliteration()}
-          language={language()}
-          verseSpacing={verseSpacing()}
+          surahId={selectedSurahId}
+          focusedPane={focusedPanel}
+          currentVerseId={currentVerseId}
+          bookmarkedAyahs={bookmarkedAyahs}
+          searchResults={searchResults}
+          searchQuery={searchQuery}
+          isSearchMode={isSearchMode}
+          searchInput={searchInput}
+          showArabic={showArabic}
+          showTranslation={showTranslation}
+          showTransliteration={showTransliteration}
+          language={language}
+          arabicZoom={arabicZoom}
+          modalOpen={anyModalOpen}
         />
-        <Show when={flashMessage()}>
+        {flashMessage && (
           <box
             position="absolute"
             bottom={2}
             right={2}
             padding={1}
-            backgroundColor={useTheme().theme().colors.secondary}
+            backgroundColor={theme.colors.secondary}
           >
-            <text color={useTheme().theme().colors.background}>{flashMessage()}</text>
+            <text color={theme.colors.background}>{flashMessage}</text>
           </box>
-        </Show>
-        <HelpDialog visible={showHelp()} />
+        )}
+        <HelpDialog visible={showHelp} />
         <CommandPalette
-          visible={showPalette()}
+          visible={showPalette}
           commands={paletteCommands}
-          selectedIndex={paletteIndex()}
+          selectedIndex={paletteIndex}
         />
         <ReflectionDialog
-          visible={showReflectionDialog()}
-          verseRef={`${selectedSurahId()}:${currentVerseId()}`}
-          note={reflectionInput()}
+          visible={showReflectionDialog}
+          verseRef={`${selectedSurahId}:${currentVerseId}`}
+          note={reflectionInput}
           onClose={() => setShowReflectionDialog(false)}
           onSave={(note) => {
-            const surahId = selectedSurahId();
-            const ayahId = currentVerseId();
-            addReflection(surahId, ayahId, `${surahId}:${ayahId}`, note);
+            addReflection(selectedSurahId, currentVerseId, `${selectedSurahId}:${currentVerseId}`, note);
             setShowReflectionDialog(false);
             refreshPanelData();
             showFlash("Reflection saved");
@@ -607,7 +637,7 @@ const AppContent: Component = () => {
   );
 };
 
-const App: Component = () => {
+const App: FC = () => {
   return (
     <ModeProvider>
       <ThemeProvider>
@@ -616,9 +646,5 @@ const App: Component = () => {
     </ModeProvider>
   );
 };
-
-if (import.meta.main) {
-  render(() => <App />);
-}
 
 export default App;
