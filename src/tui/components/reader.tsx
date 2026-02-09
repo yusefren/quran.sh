@@ -42,20 +42,12 @@ export const Reader: FC<ReaderProps> = (props) => {
   // Refs for non-focused pane scroll sync
   const scrollRefs = useRef<Record<string, any>>({});
 
-  // Sync non-focused panes to currentVerseId
+  // Sync all panes to currentVerseId
   useEffect(() => {
     if (props.currentVerseId === undefined) return;
 
-    const focusedMode =
-      isArabicFocused ? "arabic" :
-      isTranslationFocused ? "translation" :
-      isTransliterationFocused ? "transliteration" : null;
-
     const timer = setTimeout(() => {
       ["arabic", "translation", "transliteration"].forEach(mode => {
-        // Skip the focused pane — it scrolls naturally
-        if (mode === focusedMode) return;
-
         const ref = scrollRefs.current[mode];
         if (ref && typeof ref.getChildren === "function") {
           const children = ref.getChildren();
@@ -69,7 +61,7 @@ export const Reader: FC<ReaderProps> = (props) => {
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [props.currentVerseId, isArabicFocused, isTranslationFocused, isTransliterationFocused]);
+  }, [props.currentVerseId]);
 
   const paneTitle = (label: string, focused: boolean, extra?: string) => {
     const icon = focused ? ` ${theme.ornaments.focusIcon} ` : " ";
@@ -128,8 +120,7 @@ export const Reader: FC<ReaderProps> = (props) => {
           margin="auto"
           focusable={true}
           focused={focused}
-          scrollable={true}
-          scrollbar={true}
+          scrollY={true}
           flexDirection="column"
           overflow="hidden"
           alignItems={containerAlign}
@@ -137,11 +128,8 @@ export const Reader: FC<ReaderProps> = (props) => {
           viewportCulling={true}
           verticalScrollbarOptions={{
             trackOptions: {
-              character: " ",
+              foregroundColor: theme.colors.border,
             },
-            thumbOptions: {
-              character: theme.ornaments.scrollbarThumb,
-            }
           }}
         >
           <box maxWidth={arabicWidth} paddingLeft={2} paddingRight={2}>
@@ -160,8 +148,7 @@ export const Reader: FC<ReaderProps> = (props) => {
         height="100%"
         focusable={true}
         focused={focused}
-        scrollable={true}
-        scrollbar={true}
+        scrollY={true}
         flexDirection="column"
         overflow="hidden"
         alignItems={containerAlign}
@@ -169,11 +156,8 @@ export const Reader: FC<ReaderProps> = (props) => {
                 viewportCulling={true}
                 verticalScrollbarOptions={{
                   trackOptions: {
-                    character: " ",
+                    foregroundColor: theme.colors.border,
                   },
-                  thumbOptions: {
-                    character: theme.ornaments.scrollbarThumb,
-                  }
                 }}
               >
                 {surah.verses.map((v) => {
@@ -236,8 +220,7 @@ export const Reader: FC<ReaderProps> = (props) => {
       height="100%"
       focusable={true}
       focused={isAnyReaderFocused}
-      scrollable={true}
-      scrollbar={true}
+      scrollY={true}
       flexDirection="column"
       overflow="hidden"
       borderStyle={theme.borderStyle}
