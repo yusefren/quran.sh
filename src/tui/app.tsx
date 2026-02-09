@@ -18,6 +18,7 @@ import type { Cue } from "../data/cues";
 import { getAllReflections, addReflection, getReflection } from "../data/reflections";
 import type { Reflection } from "../data/reflections";
 import { getSurah, search, LANGUAGES } from "../data/quran";
+import { getPreference, setPreference } from "../data/preferences";
 import type { VerseRef } from "../data/quran";
 import { ThemeProvider, useTheme } from "./theme";
 import type { Theme } from "./theme";
@@ -32,35 +33,75 @@ export type ArabicAlign = "right" | "center" | "left";
 export type ArabicWidth = "100%" | "80%" | "60%";
 export type ArabicFlow = "verse" | "continuous";
 
+// ---------------------------------------------------------------------------
+// Load saved preferences (runs once at module level, before any render)
+// ---------------------------------------------------------------------------
+function loadPref(key: string, fallback: string): string {
+  try { return getPreference(key) ?? fallback; } catch { return fallback; }
+}
+
+const savedPrefs = {
+  selectedSurahId: Number(loadPref("selectedSurahId", "1")),
+  currentVerseId: Number(loadPref("currentVerseId", "1")),
+  showArabic: loadPref("showArabic", "true") === "true",
+  showTranslation: loadPref("showTranslation", "true") === "true",
+  showTransliteration: loadPref("showTransliteration", "false") === "true",
+  language: loadPref("language", "en"),
+  arabicAlign: loadPref("arabicAlign", "right") as ArabicAlign,
+  arabicWidth: loadPref("arabicWidth", "100%") as ArabicWidth,
+  arabicFlow: loadPref("arabicFlow", "verse") as ArabicFlow,
+  arabicZoom: Number(loadPref("arabicZoom", "0")),
+  showSidebar: loadPref("showSidebar", "true") === "true",
+  showPanel: loadPref("showPanel", "false") === "true",
+};
+
 const AppContent: FC = () => {
   const { cycleTheme } = useTheme();
   const { cycleMode } = useMode();
 
-  const [selectedSurahId, setSelectedSurahId] = useState(1);
+  const [selectedSurahId, setSelectedSurahId] = useState(savedPrefs.selectedSurahId);
   const [focusedPanel, setFocusedPanel] = useState<FocusablePane>("sidebar");
-  const [currentVerseId, setCurrentVerseId] = useState(1);
+  const [currentVerseId, setCurrentVerseId] = useState(savedPrefs.currentVerseId);
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<Set<number>>(new Set());
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState<VerseRef[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showHelp, setShowHelp] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(true);
-  const [showPanel, setShowPanel] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(savedPrefs.showSidebar);
+  const [showPanel, setShowPanel] = useState(savedPrefs.showPanel);
   const [showPalette, setShowPalette] = useState(false);
   const [paletteIndex, setPaletteIndex] = useState(0);
   const [showReflectionDialog, setShowReflectionDialog] = useState(false);
   const [reflectionInput, setReflectionInput] = useState("");
-  const [arabicZoom, setArabicZoom] = useState(0);
-  const [arabicAlign, setArabicAlign] = useState<ArabicAlign>("right");
-  const [arabicWidth, setArabicWidth] = useState<ArabicWidth>("100%");
-  const [arabicFlow, setArabicFlow] = useState<ArabicFlow>("verse");
+  const [arabicZoom, setArabicZoom] = useState(savedPrefs.arabicZoom);
+  const [arabicAlign, setArabicAlign] = useState<ArabicAlign>(savedPrefs.arabicAlign);
+  const [arabicWidth, setArabicWidth] = useState<ArabicWidth>(savedPrefs.arabicWidth);
+  const [arabicFlow, setArabicFlow] = useState<ArabicFlow>(savedPrefs.arabicFlow);
 
-  const [showArabic, setShowArabic] = useState(true);
-  const [showTranslation, setShowTranslation] = useState(true);
-  const [showTransliteration, setShowTransliteration] = useState(false);
-  const [language, setLanguage] = useState("en");
+  const [showArabic, setShowArabic] = useState(savedPrefs.showArabic);
+  const [showTranslation, setShowTranslation] = useState(savedPrefs.showTranslation);
+  const [showTransliteration, setShowTransliteration] = useState(savedPrefs.showTransliteration);
+  const [language, setLanguage] = useState(savedPrefs.language);
   const [flashMessage, setFlashMessage] = useState("");
+
+  // Persist settings whenever they change
+  useEffect(() => {
+    try {
+      setPreference("selectedSurahId", String(selectedSurahId));
+      setPreference("currentVerseId", String(currentVerseId));
+      setPreference("showArabic", String(showArabic));
+      setPreference("showTranslation", String(showTranslation));
+      setPreference("showTransliteration", String(showTransliteration));
+      setPreference("language", language);
+      setPreference("arabicAlign", arabicAlign);
+      setPreference("arabicWidth", arabicWidth);
+      setPreference("arabicFlow", arabicFlow);
+      setPreference("arabicZoom", String(arabicZoom));
+      setPreference("showSidebar", String(showSidebar));
+      setPreference("showPanel", String(showPanel));
+    } catch { /* DB may not be available in tests */ }
+  }, [selectedSurahId, currentVerseId, showArabic, showTranslation, showTransliteration, language, arabicAlign, arabicWidth, arabicFlow, arabicZoom, showSidebar, showPanel]);
 
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -578,6 +619,7 @@ const AppContent: FC = () => {
   }, []);
 
   const { theme } = useTheme();
+  // const { resolvedMode } = useMode();
 
   return (
     <RouteProvider>
@@ -650,7 +692,7 @@ const AppContent: FC = () => {
             padding={1}
             backgroundColor={theme.colors.secondary}
           >
-            <text color={theme.colors.background}>{flashMessage}</text>
+            <text fg={theme.colors.background}>{flashMessage}</text>
           </box>
         )}
         <HelpDialog visible={showHelp} />
