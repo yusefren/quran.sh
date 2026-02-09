@@ -4,6 +4,7 @@ import { getSurah } from "../../data/quran";
 import type { VerseRef } from "../../data/quran";
 import { useTheme } from "../theme";
 import type { FocusablePane } from "../app";
+import { renderArabicVerse } from "../utils/rtl";
 
 export interface ReaderProps {
   surahId: number;
@@ -96,7 +97,7 @@ export const Reader: Component<ReaderProps> = (props) => {
           let textColor: string;
 
           if (mode === "arabic") {
-            textContent = v.text;
+            textContent = renderArabicVerse(v.text);
             textColor = isCurrent ? t.colors.highlight : t.colors.arabic;
           } else if (mode === "translation") {
             textContent = v.translation;
@@ -107,7 +108,13 @@ export const Reader: Component<ReaderProps> = (props) => {
           }
 
           return (
-            <box flexDirection="column" paddingBottom={spacing()}>
+            <box
+              flexDirection="column"
+              paddingBottom={spacing()}
+              paddingLeft={mode === "arabic" ? 2 : 0}
+              paddingRight={mode === "arabic" ? 2 : 0}
+              alignItems={mode === "arabic" ? "flex-end" : "flex-start"}
+            >
               <text color={verseNumColor} bold>
                 {marker} [{surah()!.id}:{v.id}]{isBookmarked ? <span color={bookmarkColor}>{bookmark}</span> : ""}
               </text>
