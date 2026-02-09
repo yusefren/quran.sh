@@ -23,6 +23,9 @@
   },
   "bugs": "https://github.com/smashah/quran.sh/issues",
   "homepage": "https://github.com/smashah/quran.sh",
+  "scripts": {
+    "test": "bun test"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
