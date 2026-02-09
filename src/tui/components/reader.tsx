@@ -81,6 +81,7 @@ export const Reader: Component<ReaderProps> = (props) => {
         scrollbar={true}
         flexDirection="column"
         overflow="hidden"
+        backgroundColor={t.colors.background}
       >
         {surah()!.verses.map((v) => {
           const isCurrent = v.id === (props.currentVerseId ?? 1);
@@ -132,6 +133,7 @@ export const Reader: Component<ReaderProps> = (props) => {
       overflow="hidden"
       borderStyle={theme().borderStyle}
       borderColor={theme().colors.border}
+      backgroundColor={theme().colors.background}
     >
       <box paddingBottom={1}>
         <text color={theme().colors.header} bold>
@@ -153,7 +155,7 @@ export const Reader: Component<ReaderProps> = (props) => {
   );
 
   return (
-    <box flexDirection="column" width="100%" height="100%">
+    <box flexDirection="column" width="100%" height="100%" backgroundColor={theme().colors.background}>
       <Show when={props.isSearchMode}>
         <box height={1} width="100%" borderStyle={theme().borderStyle} borderColor={theme().colors.secondary}>
           <text color={theme().colors.secondary} bold>

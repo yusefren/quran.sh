@@ -18,7 +18,7 @@ export const Layout: Component<LayoutProps> = (props) => {
   const sidebarFocused = () => props.sidebarFocused ?? false;
 
   return (
-    <box flexDirection="column" width="100%" height="100%">
+    <box flexDirection="column" width="100%" height="100%" backgroundColor={theme().colors.background}>
       <box flexDirection="row" width="100%" flexGrow={1}>
         <Show when={sidebarVisible()}>
           <box
@@ -29,6 +29,7 @@ export const Layout: Component<LayoutProps> = (props) => {
             focusedBorderColor={theme().colors.borderFocused}
             title={sidebarFocused() ? ` ${theme().ornaments.focusIcon} Surahs ` : " Surahs "}
             titleAlignment="left"
+            backgroundColor={theme().colors.background}
           >
             {props.sidebar || <SurahList onSelect={(id) => navigate(`/surah/${id}`)} />}
           </box>
@@ -38,13 +39,14 @@ export const Layout: Component<LayoutProps> = (props) => {
           width={sidebarVisible() ? "70%" : "100%"}
           overflow="hidden"
           flexDirection="column"
+          backgroundColor={theme().colors.background}
         >
           {props.children}
         </box>
       </box>
 
       {/* Status bar — dynasty name + era */}
-      <box height={1} width="100%">
+      <box height={1} width="100%" backgroundColor={theme().colors.statusBar}>
         <text color={theme().colors.secondary}>
           {` ${theme().ornaments.focusIcon} ${theme().name} — ${theme().era} ${theme().ornaments.focusIcon} `}
         </text>
