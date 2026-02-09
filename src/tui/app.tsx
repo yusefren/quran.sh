@@ -28,6 +28,10 @@ export type { Theme };
 
 export type FocusablePane = "sidebar" | "arabic" | "translation" | "transliteration" | "panel";
 
+export type ArabicAlign = "right" | "center" | "left";
+export type ArabicWidth = "100%" | "80%" | "60%";
+export type ArabicFlow = "verse" | "continuous";
+
 const AppContent: FC = () => {
   const { cycleTheme } = useTheme();
   const { cycleMode } = useMode();
@@ -48,6 +52,9 @@ const AppContent: FC = () => {
   const [showReflectionDialog, setShowReflectionDialog] = useState(false);
   const [reflectionInput, setReflectionInput] = useState("");
   const [arabicZoom, setArabicZoom] = useState(0);
+  const [arabicAlign, setArabicAlign] = useState<ArabicAlign>("right");
+  const [arabicWidth, setArabicWidth] = useState<ArabicWidth>("100%");
+  const [arabicFlow, setArabicFlow] = useState<ArabicFlow>("verse");
 
   const [showArabic, setShowArabic] = useState(true);
   const [showTranslation, setShowTranslation] = useState(true);
@@ -123,12 +130,14 @@ const AppContent: FC = () => {
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
     showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
     language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
+    arabicAlign, arabicWidth, arabicFlow,
   });
   stateRef.current = {
     selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
     showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
     language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
+    arabicAlign, arabicWidth, arabicFlow,
   };
 
   const paletteCommands: PaletteCommand[] = [
@@ -405,6 +414,31 @@ const AppContent: FC = () => {
       return;
     }
 
+    if (str === 'A') {
+      const aligns: ArabicAlign[] = ["right", "center", "left"];
+      const idx = aligns.indexOf(s.arabicAlign);
+      const next = aligns[(idx + 1) % aligns.length]!;
+      setArabicAlign(next);
+      showFlash(`Arabic align: ${next}`);
+      return;
+    }
+    if (str === 'W') {
+      const widths: ArabicWidth[] = ["100%", "80%", "60%"];
+      const idx = widths.indexOf(s.arabicWidth);
+      const next = widths[(idx + 1) % widths.length]!;
+      setArabicWidth(next);
+      showFlash(`Arabic width: ${next}`);
+      return;
+    }
+    if (str === 'F') {
+      const flows: ArabicFlow[] = ["verse", "continuous"];
+      const idx = flows.indexOf(s.arabicFlow);
+      const next = flows[(idx + 1) % flows.length]!;
+      setArabicFlow(next);
+      showFlash(`Arabic flow: ${next}`);
+      return;
+    }
+
     if (str === 'T') {
       cycleTheme();
       return;
@@ -601,6 +635,12 @@ const AppContent: FC = () => {
           language={language}
           arabicZoom={arabicZoom}
           modalOpen={anyModalOpen}
+          arabicAlign={arabicAlign}
+          arabicWidth={arabicWidth}
+          arabicFlow={arabicFlow}
+          onVerseSelect={(verseId) => {
+            setCurrentVerseId(verseId);
+          }}
         />
         {flashMessage && (
           <box
