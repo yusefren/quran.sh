@@ -1,7 +1,8 @@
 /** @jsxImportSource @opentui/solid */
-import { createContext, useContext, createSignal, JSX, Component } from "solid-js";
+import { createContext, useContext, createSignal, createMemo, JSX, Component } from "solid-js";
 import type { BorderStyle } from "@opentui/core";
 import { getPreference, setPreference } from "../data/preferences.ts";
+import { useMode } from "./mode";
 
 // ---------------------------------------------------------------------------
 // Theme interface — each dynasty defines colors, border style & ornaments
@@ -26,6 +27,24 @@ export interface ThemeOrnaments {
   focusIcon: string;
 }
 
+export interface ThemeColors {
+  primary: string;
+  secondary: string;
+  background: string;
+  text: string;
+  border: string;
+  borderFocused: string;
+  highlight: string;
+  muted: string;
+  arabic: string;
+  translation: string;
+  transliteration: string;
+  verseNum: string;
+  bookmark: string;
+  header: string;
+  statusBar: string;
+}
+
 export interface Theme {
   /** Machine name */
   id: string;
@@ -41,24 +60,80 @@ export interface Theme {
   borderStyleFocused: BorderStyle;
   /** Ornamental characters drawn from the ornamentation research */
   ornaments: ThemeOrnaments;
-  colors: {
-    primary: string;
-    secondary: string;
-    background: string;
-    text: string;
-    border: string;
-    borderFocused: string;
-    highlight: string;
-    muted: string;
-    arabic: string;
-    translation: string;
-    transliteration: string;
-    verseNum: string;
-    bookmark: string;
-    header: string;
-    statusBar: string;
+  colors: ThemeColors;
+  lightColors: ThemeColors;
+}
+
+// ---------------------------------------------------------------------------
+// Color Utilities & Light Mode Derivation
+// ---------------------------------------------------------------------------
+
+/**
+ * Adjust hex color brightness.
+ * @param hex - Hex color string (e.g., "#123456")
+ * @param amount - Amount to adjust (positive to lighten, negative to darken)
+ */
+function adjustBrightness(hex: string, amount: number): string {
+  const color = hex.startsWith("#") ? hex.slice(1) : hex;
+  const num = parseInt(color, 16);
+  let r = (num >> 16) + amount;
+  let g = ((num >> 8) & 0x00ff) + amount;
+  let b = (num & 0x0000ff) + amount;
+  r = Math.min(255, Math.max(0, r));
+  g = Math.min(255, Math.max(0, g));
+  b = Math.min(255, Math.max(0, b));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
+/**
+ * Mix a color with white (tint) or black (shade).
+ * @param hex - Hex color
+ * @param weight - 0 to 1 (1 is pure white/black)
+ */
+function mixWith(hex: string, targetHex: string, weight: number): string {
+  const color = hex.startsWith("#") ? hex.slice(1) : hex;
+  const target = targetHex.startsWith("#") ? targetHex.slice(1) : targetHex;
+  const c1 = parseInt(color, 16);
+  const c2 = parseInt(target, 16);
+
+  const r1 = c1 >> 16, g1 = (c1 >> 8) & 0xff, b1 = c1 & 0xff;
+  const r2 = c2 >> 16, g2 = (c2 >> 8) & 0xff, b2 = c2 & 0xff;
+
+  const r = Math.round(r1 * (1 - weight) + r2 * weight);
+  const g = Math.round(g1 * (1 - weight) + g2 * weight);
+  const b = Math.round(b1 * (1 - weight) + b2 * weight);
+
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
+/**
+ * Algorithmic derivation of a light palette from a dark one.
+ */
+function deriveLightPalette(dark: ThemeColors, id: string): ThemeColors {
+  // Themes categorized as "cool" (blues/teals/greens) vs "warm" (golds/reds/browns)
+  const coolThemes = ["mamluk", "ottoman", "madinah", "fatimid", "seljuk", "abbasid"];
+  const isCool = coolThemes.includes(id);
+
+  return {
+    background: isCool ? "#F5F7FA" : "#FAF8F5",
+    text: "#1A1A2E",
+    primary: dark.primary, // Keep accent colors saturated
+    secondary: dark.secondary,
+    border: mixWith(dark.border, "#FFFFFF", 0.4),
+    borderFocused: adjustBrightness(dark.secondary, -30),
+    highlight: adjustBrightness(dark.highlight, -50),
+    muted: "#9CA3AF",
+    statusBar: mixWith(dark.statusBar, "#FFFFFF", 0.6),
+    // For text-like accents, darken for contrast against light bg
+    arabic: adjustBrightness(dark.arabic, -60),
+    translation: "#1A1A2E",
+    transliteration: adjustBrightness(dark.transliteration, -40),
+    verseNum: adjustBrightness(dark.verseNum, -40),
+    bookmark: adjustBrightness(dark.bookmark, -30),
+    header: adjustBrightness(dark.header, -40),
   };
 }
+
 
 // ---------------------------------------------------------------------------
 // Dynasty themes — colours derived from historical pigment research,
@@ -105,6 +180,7 @@ export const mamlukTheme: Theme = {
     header: "#D4AF37",         // Gold headers
     statusBar: "#0F1D45",      // Deep lapis ground
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -147,6 +223,7 @@ export const ottomanTheme: Theme = {
     header: "#FFD700",         // Gold headers
     statusBar: "#061229",      // Darkest navy
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -189,6 +266,7 @@ export const safavidTheme: Theme = {
     header: "#C5A059",         // Antique gold headers
     statusBar: "#0B1120",      // Deep dark slate
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -231,6 +309,7 @@ export const andalusianTheme: Theme = {
     header: "#DAA520",         // Goldenrod headers
     statusBar: "#081420",      // Darkest blue
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -273,6 +352,7 @@ export const maghribiTheme: Theme = {
     header: "#B8860B",         // Goldenrod headers
     statusBar: "#061020",      // Darkest indigo
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -313,6 +393,7 @@ export const madinahTheme: Theme = {
     header: "#00E676",
     statusBar: "#1B5E20",
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -355,6 +436,7 @@ export const umayyadTheme: Theme = {
     header: "#DAA520",         // Goldenrod headers
     statusBar: "#0D0A06",      // Darkest parchment
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -397,6 +479,7 @@ export const abbasidTheme: Theme = {
     header: "#FFD700",         // Gold headers
     statusBar: "#060810",      // Deepest indigo
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -439,6 +522,7 @@ export const fatimidTheme: Theme = {
     header: "#FFD700",         // Gold headers
     statusBar: "#080A14",      // Deepest indigo
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -481,6 +565,7 @@ export const seljukTheme: Theme = {
     header: "#00BCD4",         // Turquoise headers
     statusBar: "#060E10",      // Darkest teal
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 /**
@@ -523,6 +608,7 @@ export const mughalTheme: Theme = {
     header: "#DAA520",         // Goldenrod headers
     statusBar: "#0A0606",      // Darkest warm
   },
+  get lightColors() { return deriveLightPalette(this.colors, this.id); },
 };
 
 // ---------------------------------------------------------------------------
@@ -560,6 +646,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType>();
 
 export const ThemeProvider: Component<{ children: JSX.Element }> = (props) => {
+  const { resolvedMode } = useMode();
+  
   // Synchronously load saved theme preference before signal creation (no flash)
   let initialTheme = defaultTheme;
   try {
@@ -572,10 +660,19 @@ export const ThemeProvider: Component<{ children: JSX.Element }> = (props) => {
     // DB may not be available (tests, first run, etc.)
   }
 
-  const [theme, setTheme] = createSignal<Theme>(initialTheme);
+  const [rawTheme, setTheme] = createSignal<Theme>(initialTheme);
+
+  const theme = createMemo(() => {
+    const t = rawTheme();
+    const mode = resolvedMode();
+    return {
+      ...t,
+      colors: mode === "dark" ? t.colors : t.lightColors,
+    };
+  });
 
   const cycleTheme = () => {
-    const current = theme();
+    const current = rawTheme();
     const idx = THEMES.findIndex((t) => t.id === current.id);
     const next = THEMES[(idx + 1) % THEMES.length] ?? THEMES[0]!;
     setTheme(next);
@@ -583,7 +680,7 @@ export const ThemeProvider: Component<{ children: JSX.Element }> = (props) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, cycleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme: (t: Theme) => setTheme(t), cycleTheme }}>
       {props.children}
     </ThemeContext.Provider>
   );

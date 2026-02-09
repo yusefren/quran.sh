@@ -2,13 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { testRender } from "@opentui/solid";
 import { Reader } from "../../src/tui/components/reader";
 import { ThemeProvider } from "../../src/tui/theme";
+import { ModeProvider } from "../../src/tui/mode";
 
 describe("Reader", () => {
   test("renders the verses of a surah", async () => {
     const { captureSpans, renderOnce, mockInput } = await testRender(() => (
-      <ThemeProvider>
+      <ModeProvider><ThemeProvider>
         <Reader surahId={1} focusedPane="arabic" />
-      </ThemeProvider>
+      </ThemeProvider></ModeProvider>
     ));
     await renderOnce();
 
@@ -46,9 +47,9 @@ describe("Reader", () => {
   test("handles surah change", async () => {
     // Render Surah 114 (An-Nas)
     const { captureSpans, renderOnce } = await testRender(() => (
-      <ThemeProvider>
+      <ModeProvider><ThemeProvider>
         <Reader surahId={114} focusedPane="arabic" />
-      </ThemeProvider>
+      </ThemeProvider></ModeProvider>
     ));
     await renderOnce();
 
@@ -65,9 +66,9 @@ describe("Reader", () => {
 
   test("displays error for invalid surah", async () => {
     const { captureSpans, renderOnce } = await testRender(() => (
-      <ThemeProvider>
+      <ModeProvider><ThemeProvider>
         <Reader surahId={999} focusedPane="arabic" />
-      </ThemeProvider>
+      </ThemeProvider></ModeProvider>
     ));
     await renderOnce();
 

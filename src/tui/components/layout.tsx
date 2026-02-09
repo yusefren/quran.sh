@@ -3,6 +3,7 @@ import { type Component, type JSX, Show } from "solid-js";
 import { SurahList } from "./surah-list";
 import { useRoute } from "../router";
 import { useTheme } from "../theme";
+import { useMode } from "../mode";
 
 export interface LayoutProps {
   sidebar?: JSX.Element;
@@ -13,6 +14,7 @@ export interface LayoutProps {
 
 export const Layout: Component<LayoutProps> = (props) => {
   const { theme } = useTheme();
+  const { mode, resolvedMode } = useMode();
   const { navigate } = useRoute();
   const sidebarVisible = () => props.showSidebar ?? true;
   const sidebarFocused = () => props.sidebarFocused ?? false;
@@ -45,10 +47,13 @@ export const Layout: Component<LayoutProps> = (props) => {
         </box>
       </box>
 
-      {/* Status bar — dynasty name + era */}
-      <box height={1} width="100%" backgroundColor={theme().colors.statusBar}>
+      {/* Status bar — dynasty name + era + mode */}
+      <box height={1} width="100%" backgroundColor={theme().colors.statusBar} flexDirection="row" justifyContent="space-between">
         <text color={theme().colors.secondary}>
           {` ${theme().ornaments.focusIcon} ${theme().name} — ${theme().era} ${theme().ornaments.focusIcon} `}
+        </text>
+        <text color={theme().colors.muted}>
+          {` Mode: ${mode().toUpperCase()}${mode() === "auto" ? ` (${resolvedMode()})` : ""} `}
         </text>
       </box>
     </box>

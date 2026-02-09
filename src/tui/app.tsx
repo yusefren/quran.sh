@@ -12,6 +12,7 @@ import { getSurah, search, LANGUAGES } from "../data/quran";
 import type { VerseRef } from "../data/quran";
 import { ThemeProvider, useTheme } from "./theme";
 import type { Theme } from "./theme";
+import { ModeProvider, useMode } from "./mode";
 import * as readline from "node:readline";
 
 export { useTheme };
@@ -21,6 +22,7 @@ export type FocusablePane = "sidebar" | "arabic" | "translation" | "transliterat
 
 const AppContent: Component = () => {
   const { cycleTheme } = useTheme();
+  const { cycleMode } = useMode();
 
   const [selectedSurahId, setSelectedSurahId] = createSignal(1);
   const [focusedPanel, setFocusedPanel] = createSignal<FocusablePane>("sidebar");
@@ -143,6 +145,11 @@ const AppContent: Component = () => {
 
       if (str === 'T') {
         cycleTheme();
+        return;
+      }
+
+      if (str === 'D') {
+        cycleMode();
         return;
       }
 
@@ -271,9 +278,11 @@ const AppContent: Component = () => {
 
 const App: Component = () => {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <ModeProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </ModeProvider>
   );
 };
 
