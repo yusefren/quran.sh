@@ -276,7 +276,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 1. BiDi spike — validate bidi-js + OpenTUI Arabic rendering
+- [x] 1. BiDi spike — validate bidi-js + OpenTUI Arabic rendering
 
   **What to do**:
   - Install `bidi-js`: `bun add bidi-js`
@@ -349,7 +349,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 2. Fix RTL Arabic rendering + right-alignment
+- [x] 2. Fix RTL Arabic rendering + right-alignment
 
   **What to do**:
   - Create `src/tui/utils/rtl.ts` — RTL processing module:
@@ -438,7 +438,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 3. Fix scroll sync across panes
+- [x] 3. Fix scroll sync across panes
 
   **What to do**:
   - The `currentVerseId` signal already exists in `app.tsx` and is passed to `<Reader>` as a prop
@@ -525,7 +525,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 4. Add explicit background colors to all containers
+- [x] 4. Add explicit background colors to all containers
 
   **What to do**:
   - Add `backgroundColor={theme().colors.background}` to the root `<box>` in `layout.tsx` (line 21)
@@ -595,7 +595,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 5. Light/dark mode system
+- [x] 5. Light/dark mode system
 
   **What to do**:
   - Create `src/tui/mode.tsx` — Mode context provider:
@@ -705,7 +705,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 6. Database migration for cues + reflections tables
+- [x] 6. Database migration for cues + reflections tables
 
   **What to do**:
   - Create `migrations/003_cues_reflections.sql`:
@@ -785,7 +785,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 7. Cues data layer (TDD)
+- [x] 7. Cues data layer (TDD)
 
   **What to do**:
   - **RED**: Create `src/data/__tests__/cues.test.ts` with tests:
@@ -860,7 +860,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 8. Reflections data layer (TDD)
+- [x] 8. Reflections data layer (TDD)
 
   **What to do**:
   - **RED**: Create `src/data/__tests__/reflections.test.ts` with tests:
@@ -935,7 +935,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 9. Cue keybindings (Shift+N to set, N to jump)
+- [x] 9. Cue keybindings (Shift+N to set, N to jump)
 
   **What to do**:
   - Update `src/tui/app.tsx` keyboard handler:
@@ -1144,7 +1144,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 11. Reflection text input dialog
+- [x] 11. Reflection text input dialog
 
   **What to do**:
   - Create `src/tui/components/reflection-dialog.tsx`:
@@ -1248,7 +1248,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 12. Update help dialog, command palette, and README
+- [x] 12. Update help dialog, command palette, and README
 
   **What to do**:
   - Update `src/tui/components/help-dialog.tsx`:
@@ -1285,10 +1285,10 @@ Parallel Speedup: ~35% faster than sequential
 
   **Acceptance Criteria**:
 
-  - [ ] Help dialog shows: Shift+D, B, R, 1-9/Shift+1-9 shortcuts
-  - [ ] Command palette includes: Toggle Panel, Cycle Mode, Add Reflection
-  - [ ] README features list includes: Cues, Reflections, Light/Dark Mode, Panel
-  - [ ] README keyboard shortcuts table includes all new keybindings
+  - [x] Help dialog shows: Shift+D, B, R, 1-9/Shift+1-9 shortcuts
+  - [x] Command palette includes: Toggle Panel, Cycle Mode, Add Reflection
+  - [x] README features list includes: Cues, Reflections, Light/Dark Mode, Panel
+  - [x] README keyboard shortcuts table includes all new keybindings
 
   **Commit**: YES
   - Message: `docs: update help dialog, command palette, and README with new features`
@@ -1297,7 +1297,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 13. Final integration QA
+- [x] 13. Final integration QA
 
   **What to do**:
   - Run full test suite: `bun test`

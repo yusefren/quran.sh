@@ -15,6 +15,10 @@
 - **Dynasty Themes**: 11 themes inspired by Islamic manuscript illumination (Madinah, Mamluk, Ottoman, Safavid, Andalusian, Maghribi, Umayyad, Abbasid, Fatimid, Seljuk, Mughal) — press `T` to cycle
 - **Focus Indicators**: Heavy borders + diamond icon on focused pane
 - **Verse Spacing**: `+`/`-` to adjust spacing between verses
+- **Cues**: Quick-navigation slots (1–9) for instant jumping
+- **Reflections**: Personal notes attached to verses
+- **Activity Panel**: Toggleable side panel for bookmarks, cues, and reflections
+- **Light/Dark Mode**: Automatic detection + manual toggle (`D`)
 - **Progress Tracking**: Reading logs and streak tracking
 - **Bookmarks**: Mark and revisit favorite verses
 - **Search**: Full-text search across all translations
