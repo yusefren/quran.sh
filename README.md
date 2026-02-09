@@ -12,6 +12,7 @@
 - **Multi-Pane TUI**: Arabic top, Translation + Transliteration split below
 - **Toggleable Sidebar**: Press `s` to show/hide the surah list
 - **Rich Colors**: Gold Arabic, teal transliteration, green accents
+- **Dynasty Themes**: 11 themes inspired by Islamic manuscript illumination (Madinah, Mamluk, Ottoman, Safavid, Andalusian, Maghribi, Umayyad, Abbasid, Fatimid, Seljuk, Mughal) — press `T` to cycle
 - **Focus Indicators**: Heavy borders + diamond icon on focused pane
 - **Verse Spacing**: `+`/`-` to adjust spacing between verses
 - **Progress Tracking**: Reading logs and streak tracking
@@ -71,6 +72,7 @@ quran
 | `t` | Toggle Translation pane |
 | `r` | Toggle Transliteration pane |
 | `l` | Cycle translation language |
+| `T` | Cycle theme (Madinah, Mamluk, Ottoman, Safavid, Andalusian, Maghribi, Umayyad, Abbasid, Fatimid, Seljuk, Mughal) |
 | `s` | Toggle sidebar |
 | `+`/`-` | Increase/decrease verse spacing |
 | `/` | Search verses |
