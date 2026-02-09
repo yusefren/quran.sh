@@ -1,4 +1,5 @@
 import { type FC, useMemo, useEffect, useRef } from "react";
+import { TextAttributes } from "@opentui/core";
 import { getSurah } from "../../data/quran";
 import type { VerseRef } from "../../data/quran";
 import { useTheme } from "../theme";
@@ -144,7 +145,7 @@ export const Reader: FC<ReaderProps> = (props) => {
           }}
         >
           <box maxWidth={arabicWidth} paddingLeft={2} paddingRight={2}>
-            <text color={theme.colors.arabic} bold>
+            <text fg={theme.colors.arabic} attributes={TextAttributes.BOLD}>
               {parts.join("  ")}
             </text>
           </box>
@@ -216,10 +217,10 @@ export const Reader: FC<ReaderProps> = (props) => {
                 if (props.onVerseSelect) props.onVerseSelect(v.id);
               }}
             >
-              <text color={verseNumColor} bold>
-                {marker} {v.id}{isBookmarked ? <span color={bookmarkColor}>{bookmark}</span> : ""}
+              <text fg={verseNumColor} attributes={TextAttributes.BOLD}>
+                {marker} {v.id}{isBookmarked ? <span fg={bookmarkColor}>{bookmark}</span> : ""}
               </text>
-              <text color={textColor} bold={mode === "arabic"}>
+              <text fg={textColor} attributes={mode === "arabic" ? TextAttributes.BOLD : TextAttributes.NONE}>
                 {textContent}
               </text>
             </box>
@@ -245,19 +246,19 @@ export const Reader: FC<ReaderProps> = (props) => {
       viewportCulling={true}
     >
       <box paddingBottom={1}>
-        <text color={theme.colors.header} bold>
+        <text fg={theme.colors.header} attributes={TextAttributes.BOLD}>
           {`Found ${props.searchResults!.length} result(s) for "${props.searchQuery}"`}
         </text>
       </box>
       <box paddingBottom={1}>
-        <text color={theme.colors.muted}>{"Press ESC to return to surah view"}</text>
+        <text fg={theme.colors.muted}>{"Press ESC to return to surah view"}</text>
       </box>
       {props.searchResults!.map((r) => (
         <box key={r.reference} flexDirection="column" paddingBottom={1}>
-          <text color={theme.colors.verseNum} bold>
+          <text fg={theme.colors.verseNum} attributes={TextAttributes.BOLD}>
             {`  [${r.reference}]`}
           </text>
-          <text color={theme.colors.translation}>{r.translation}</text>
+          <text fg={theme.colors.translation}>{r.translation}</text>
         </box>
       ))}
     </scrollbox>
@@ -267,7 +268,7 @@ export const Reader: FC<ReaderProps> = (props) => {
     <box flexDirection="column" width="100%" height="100%" backgroundColor={theme.colors.background}>
       {props.isSearchMode && (
         <box height={1} width="100%" borderStyle={theme.borderStyle} borderColor={theme.colors.secondary}>
-          <text color={theme.colors.secondary} bold>
+          <text fg={theme.colors.secondary} attributes={TextAttributes.BOLD}>
             {"/"}{props.searchInput ?? ""}{"_"}
           </text>
         </box>
@@ -286,7 +287,7 @@ export const Reader: FC<ReaderProps> = (props) => {
               title={paneTitle("Reader", false)}
               titleAlignment="left"
             >
-              <text color={theme.colors.muted}>Surah not found</text>
+              <text fg={theme.colors.muted}>Surah not found</text>
             </box>
           ) : (
             <>

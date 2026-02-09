@@ -1,4 +1,5 @@
 import { type FC } from "react";
+import { TextAttributes } from "@opentui/core";
 import { useTheme } from "../theme";
 
 interface HelpDialogProps {
@@ -54,7 +55,7 @@ export const HelpDialog: FC<HelpDialogProps> = (props) => {
       titleAlignment="center"
     >
       <box justifyContent="center" marginBottom={1}>
-        <text color={theme.colors.highlight} bold>
+        <text fg={theme.colors.highlight} attributes={TextAttributes.BOLD}>
           {`${theme.ornaments.headerLeft} quran.sh Keyboard Shortcuts ${theme.ornaments.headerRight}`}
         </text>
       </box>
@@ -62,10 +63,10 @@ export const HelpDialog: FC<HelpDialogProps> = (props) => {
       <box flexDirection="column" flexGrow={1} overflow="hidden">
         {shortcuts.map((s) => (
           <box key={s.key} flexDirection="row">
-            <text color={theme.colors.secondary} bold width={16}>
+            <text fg={theme.colors.secondary} attributes={TextAttributes.BOLD} width={16}>
               {`  ${s.key}`}
             </text>
-            <text color={theme.colors.text}>
+            <text fg={theme.colors.text}>
               {s.desc}
             </text>
           </box>
@@ -73,7 +74,7 @@ export const HelpDialog: FC<HelpDialogProps> = (props) => {
       </box>
 
       <box justifyContent="center" marginTop={1}>
-        <text color={theme.colors.muted}>
+        <text fg={theme.colors.muted}>
           {`Theme: ${theme.name} (${theme.era}) ${theme.ornaments.sectionMarker} Press T to change`}
         </text>
       </box>
