@@ -9,11 +9,12 @@ import { Reader } from "./components/reader";
 import { HelpDialog } from "./components/help-dialog";
 import { Panel } from "./components/panel";
 import type { PanelTab } from "./components/panel";
+import { ReflectionDialog } from "./components/reflection-dialog";
 import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
 import type { Bookmark } from "../data/bookmarks";
 import { setCue, getCue, getAllCues } from "../data/cues";
 import type { Cue } from "../data/cues";
-import { getAllReflections } from "../data/reflections";
+import { getAllReflections, addReflection, getReflection } from "../data/reflections";
 import type { Reflection } from "../data/reflections";
 import { getSurah, search, LANGUAGES } from "../data/quran";
 import type { VerseRef } from "../data/quran";
@@ -42,6 +43,8 @@ const AppContent: Component = () => {
   const [showHelp, setShowHelp] = createSignal(false);
   const [showSidebar, setShowSidebar] = createSignal(true);
   const [showPanel, setShowPanel] = createSignal(false);
+  const [showReflectionDialog, setShowReflectionDialog] = createSignal(false);
+  const [reflectionInput, setReflectionInput] = createSignal("");
   const [verseSpacing, setVerseSpacing] = createSignal(1);
 
   const [showArabic, setShowArabic] = createSignal(true);
@@ -108,6 +111,36 @@ const AppContent: Component = () => {
     }
 
     const onKeyPress = (str: string, key: any) => {
+      if (showReflectionDialog()) {
+        if (key && key.name === "escape") {
+          setShowReflectionDialog(false);
+          return;
+        }
+        if (key && key.name === "return") {
+          const surahId = selectedSurahId();
+          const ayahId = currentVerseId();
+          const verseRef = `${surahId}:${ayahId}`;
+          try {
+            addReflection(surahId, ayahId, verseRef, reflectionInput());
+            setShowReflectionDialog(false);
+            refreshPanelData();
+            showFlash("Reflection saved");
+          } catch {
+            /* DB */
+          }
+          return;
+        }
+        if (key && key.name === "backspace") {
+          setReflectionInput((prev) => prev.slice(0, -1));
+          return;
+        }
+        if (str && str.length === 1 && !key?.ctrl && !key?.meta) {
+          setReflectionInput((prev) => prev + str);
+          return;
+        }
+        return;
+      }
+
       if (showHelp()) {
         if (key && (key.name === 'escape' || key.name === 'q' || str === '?')) {
           setShowHelp(false);
@@ -184,6 +217,11 @@ const AppContent: Component = () => {
             setSelectedSurahId(item.surah);
             setCurrentVerseId(item.ayah);
             refreshBookmarks();
+
+            if (panelTab() === "reflections") {
+              setReflectionInput((item as Reflection).note);
+              setShowReflectionDialog(true);
+            }
           }
           return;
         }
@@ -241,6 +279,19 @@ const AppContent: Component = () => {
         if (!wasVisible) {
           refreshPanelData();
           setFocusedPanel("panel");
+        }
+        return;
+      }
+
+      if (str === "R") {
+        const surahId = selectedSurahId();
+        const ayahId = currentVerseId();
+        try {
+          const existing = getReflection(surahId, ayahId);
+          setReflectionInput(existing ? existing.note : "");
+          setShowReflectionDialog(true);
+        } catch {
+          /* DB */
         }
         return;
       }
@@ -407,6 +458,21 @@ const AppContent: Component = () => {
           </box>
         </Show>
         <HelpDialog visible={showHelp()} />
+        <ReflectionDialog
+          visible={showReflectionDialog()}
+          verseRef={`${selectedSurahId()}:${currentVerseId()}`}
+          note={reflectionInput()}
+          onClose={() => setShowReflectionDialog(false)}
+          onSave={(note) => {
+            const surahId = selectedSurahId();
+            const ayahId = currentVerseId();
+            addReflection(surahId, ayahId, `${surahId}:${ayahId}`, note);
+            setShowReflectionDialog(false);
+            refreshPanelData();
+            showFlash("Reflection saved");
+          }}
+          onInput={(text) => setReflectionInput(text)}
+        />
       </Layout>
     </RouteProvider>
   );
