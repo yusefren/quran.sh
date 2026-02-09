@@ -38,36 +38,37 @@ export const Reader: FC<ReaderProps> = (props) => {
   const isTransliterationFocused = props.focusedPane === "transliteration";
   const isAnyReaderFocused = !props.modalOpen && (isArabicFocused || isTranslationFocused || isTransliterationFocused);
 
+  // Refs for non-focused pane scroll sync
   const scrollRefs = useRef<Record<string, any>>({});
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Sync non-focused panes to currentVerseId
   useEffect(() => {
     if (props.currentVerseId === undefined) return;
 
-    // Clear any previous timer
-    if (timerRef.current) clearTimeout(timerRef.current);
+    const focusedMode =
+      isArabicFocused ? "arabic" :
+      isTranslationFocused ? "translation" :
+      isTransliterationFocused ? "transliteration" : null;
 
-    // Small delay to ensure layout has updated
-    timerRef.current = setTimeout(() => {
+    const timer = setTimeout(() => {
       ["arabic", "translation", "transliteration"].forEach(mode => {
+        // Skip the focused pane — it scrolls naturally
+        if (mode === focusedMode) return;
+
         const ref = scrollRefs.current[mode];
         if (ref && typeof ref.getChildren === "function") {
           const children = ref.getChildren();
           const target = children[props.currentVerseId! - 1];
           if (target) {
-            const viewportHeight = ref.getLayoutNode().getComputedHeight();
-            const verseHeight = target.getLayoutNode().getComputedHeight();
-            const centerY = target.y - (viewportHeight / 2) + (verseHeight / 2);
-            ref.scrollTo(Math.max(0, centerY));
+            const y = target.getLayoutNode().getComputedTop();
+            ref.scrollTo(y);
           }
         }
       });
-    }, 10);
+    }, 50);
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [props.currentVerseId]);
+    return () => clearTimeout(timer);
+  }, [props.currentVerseId, isArabicFocused, isTranslationFocused, isTransliterationFocused]);
 
   const paneTitle = (label: string, focused: boolean, extra?: string) => {
     const icon = focused ? ` ${theme.ornaments.focusIcon} ` : " ";
@@ -319,7 +320,7 @@ export const Reader: FC<ReaderProps> = (props) => {
                       borderColor={isTranslationFocused ? theme.colors.borderFocused : theme.colors.border}
                       customBorderChars={theme.borderChars}
                       focusedBorderColor={theme.colors.borderFocused}
-                      title={paneTitle("Translation", isTranslationFocused)}
+                      title={paneTitle("Translation", isTranslationFocused, `[${(props.language ?? "en").toUpperCase()}]`)}
                       titleAlignment="left"
                     >
                       {renderVerseList("translation", isTranslationFocused)}
