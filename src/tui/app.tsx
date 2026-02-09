@@ -7,8 +7,14 @@ import { SurahList } from "./components/surah-list";
 import { StreakChart } from "./components/streak-chart";
 import { Reader } from "./components/reader";
 import { HelpDialog } from "./components/help-dialog";
-import { toggleBookmark, getBookmarkedAyahs } from "../data/bookmarks";
-import { setCue, getCue } from "../data/cues";
+import { Panel } from "./components/panel";
+import type { PanelTab } from "./components/panel";
+import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
+import type { Bookmark } from "../data/bookmarks";
+import { setCue, getCue, getAllCues } from "../data/cues";
+import type { Cue } from "../data/cues";
+import { getAllReflections } from "../data/reflections";
+import type { Reflection } from "../data/reflections";
 import { getSurah, search, LANGUAGES } from "../data/quran";
 import type { VerseRef } from "../data/quran";
 import { ThemeProvider, useTheme } from "./theme";
@@ -19,7 +25,7 @@ import * as readline from "node:readline";
 export { useTheme };
 export type { Theme };
 
-export type FocusablePane = "sidebar" | "arabic" | "translation" | "transliteration";
+export type FocusablePane = "sidebar" | "arabic" | "translation" | "transliteration" | "panel";
 
 const AppContent: Component = () => {
   const { cycleTheme } = useTheme();
@@ -35,6 +41,7 @@ const AppContent: Component = () => {
   const [searchQuery, setSearchQuery] = createSignal("");
   const [showHelp, setShowHelp] = createSignal(false);
   const [showSidebar, setShowSidebar] = createSignal(true);
+  const [showPanel, setShowPanel] = createSignal(false);
   const [verseSpacing, setVerseSpacing] = createSignal(1);
 
   const [showArabic, setShowArabic] = createSignal(true);
@@ -48,12 +55,27 @@ const AppContent: Component = () => {
     setTimeout(() => setFlashMessage(""), 2000);
   };
 
+  const [panelTab, setPanelTab] = createSignal<PanelTab>("bookmarks");
+  const [panelIndex, setPanelIndex] = createSignal(0);
+  const [allBookmarks, setAllBookmarks] = createSignal<Bookmark[]>([]);
+  const [allCues, setAllCues] = createSignal<Cue[]>([]);
+  const [allReflections, setAllReflections] = createSignal<Reflection[]>([]);
+
   const refreshBookmarks = () => {
     try {
       setBookmarkedAyahs(getBookmarkedAyahs(selectedSurahId()));
+      setAllBookmarks(getAllBookmarks());
     } catch {
       // DB may not be available in tests
     }
+  };
+
+  const refreshPanelData = () => {
+    try {
+      setAllBookmarks(getAllBookmarks());
+      setAllCues(getAllCues());
+      setAllReflections(getAllReflections());
+    } catch { /* DB */ }
   };
 
   const isReaderPane = (p: FocusablePane) => p === "arabic" || p === "translation" || p === "transliteration";
@@ -64,6 +86,7 @@ const AppContent: Component = () => {
     panes.push("arabic");
     if (showTranslation()) panes.push("translation");
     if (showTransliteration()) panes.push("transliteration");
+    if (showPanel()) panes.push("panel");
 
     const current = focusedPanel();
     const idx = panes.indexOf(current);
@@ -73,6 +96,7 @@ const AppContent: Component = () => {
 
   onMount(() => {
     refreshBookmarks();
+    refreshPanelData();
 
     try {
       if (process.stdin.isTTY) {
@@ -129,6 +153,42 @@ const AppContent: Component = () => {
         return;
       }
 
+      if (focusedPanel() === "panel") {
+        const tabs: PanelTab[] = ["bookmarks", "cues", "reflections"];
+        const items = panelTab() === "bookmarks" ? allBookmarks() :
+                      panelTab() === "cues" ? allCues() : allReflections();
+
+        if (key && (key.name === "left" || str === "h")) {
+          const idx = tabs.indexOf(panelTab());
+          setPanelTab(tabs[(idx - 1 + tabs.length) % tabs.length]);
+          setPanelIndex(0);
+          return;
+        }
+        if (key && (key.name === "right" || str === "l")) {
+          const idx = tabs.indexOf(panelTab());
+          setPanelTab(tabs[(idx + 1) % tabs.length]);
+          setPanelIndex(0);
+          return;
+        }
+        if (str === "j" || (key && key.name === "down")) {
+          setPanelIndex((prev) => Math.min(prev + 1, Math.max(0, items.length - 1)));
+          return;
+        }
+        if (str === "k" || (key && key.name === "up")) {
+          setPanelIndex((prev) => Math.max(prev - 1, 0));
+          return;
+        }
+        if (key && key.name === "return") {
+          const item = items[panelIndex()];
+          if (item) {
+            setSelectedSurahId(item.surah);
+            setCurrentVerseId(item.ayah);
+            refreshBookmarks();
+          }
+          return;
+        }
+      }
+
       if (str === 'a') {
         setShowArabic(prev => !prev);
         return;
@@ -168,6 +228,19 @@ const AppContent: Component = () => {
         }
         if (!wasVisible) {
           setFocusedPanel("sidebar");
+        }
+        return;
+      }
+
+      if (str === 'B') {
+        const wasVisible = showPanel();
+        setShowPanel(prev => !prev);
+        if (wasVisible && focusedPanel() === "panel") {
+          setFocusedPanel("arabic");
+        }
+        if (!wasVisible) {
+          refreshPanelData();
+          setFocusedPanel("panel");
         }
         return;
       }
@@ -215,6 +288,7 @@ const AppContent: Component = () => {
           try {
             setCue(slot, surahId, ayahId, verseRef);
             showFlash(`Cue ${slot} set \u2192 ${verseRef}`);
+            if (showPanel()) refreshPanelData();
           } catch { /* DB */ }
           return;
         }
@@ -251,6 +325,7 @@ const AppContent: Component = () => {
           try {
             toggleBookmark(surahId, ayahId, verseRef);
             refreshBookmarks();
+            if (showPanel()) refreshPanelData();
           } catch {
             // DB may not be available
           }
@@ -269,7 +344,9 @@ const AppContent: Component = () => {
     <RouteProvider>
       <Layout
         showSidebar={showSidebar()}
+        showPanel={showPanel()}
         sidebarFocused={focusedPanel() === "sidebar"}
+        panelFocused={focusedPanel() === "panel"}
         sidebar={
           <box flexDirection="column" height="100%">
             <box height="25%">
@@ -291,6 +368,16 @@ const AppContent: Component = () => {
               />
             </box>
           </box>
+        }
+        panel={
+          <Panel
+            bookmarks={allBookmarks()}
+            cues={allCues()}
+            reflections={allReflections()}
+            activeTab={panelTab()}
+            selectedIndex={panelIndex()}
+            focused={focusedPanel() === "panel"}
+          />
         }
       >
         <Reader
