@@ -10,6 +10,8 @@ import { HelpDialog } from "./components/help-dialog";
 import { Panel } from "./components/panel";
 import type { PanelTab } from "./components/panel";
 import { ReflectionDialog } from "./components/reflection-dialog";
+import { CommandPalette } from "./components/command-palette";
+import type { CommandItem } from "./components/command-palette";
 import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
 import type { Bookmark } from "../data/bookmarks";
 import { setCue, getCue, getAllCues } from "../data/cues";
@@ -43,6 +45,8 @@ const AppContent: Component = () => {
   const [showHelp, setShowHelp] = createSignal(false);
   const [showSidebar, setShowSidebar] = createSignal(true);
   const [showPanel, setShowPanel] = createSignal(false);
+  const [showPalette, setShowPalette] = createSignal(false);
+  const [paletteIndex, setPaletteIndex] = createSignal(0);
   const [showReflectionDialog, setShowReflectionDialog] = createSignal(false);
   const [reflectionInput, setReflectionInput] = createSignal("");
   const [verseSpacing, setVerseSpacing] = createSignal(1);
@@ -63,6 +67,101 @@ const AppContent: Component = () => {
   const [allBookmarks, setAllBookmarks] = createSignal<Bookmark[]>([]);
   const [allCues, setAllCues] = createSignal<Cue[]>([]);
   const [allReflections, setAllReflections] = createSignal<Reflection[]>([]);
+
+  // Command palette: actionable items with their labels and actions
+  interface PaletteCommand extends CommandItem {
+    action: () => void;
+  }
+
+  const paletteCommands: PaletteCommand[] = [
+    { key: "a", label: "Toggle Arabic", description: "Show/hide Arabic pane", action: () => setShowArabic((prev) => !prev) },
+    { key: "t", label: "Toggle Translation", description: "Show/hide Translation pane", action: () => setShowTranslation((prev) => !prev) },
+    { key: "r", label: "Toggle Transliteration", description: "Show/hide Transliteration pane", action: () => setShowTransliteration((prev) => !prev) },
+    {
+      key: "l",
+      label: "Cycle Language",
+      description: "Switch translation language",
+      action: () => {
+        const idx = LANGUAGES.indexOf(language() as any);
+        if (idx !== -1) setLanguage(LANGUAGES[(idx + 1) % LANGUAGES.length]);
+      },
+    },
+    { key: "D", label: "Cycle Mode", description: "Switch light/dark mode", action: () => cycleMode() },
+    { key: "T", label: "Cycle Theme", description: "Switch dynasty theme", action: () => cycleTheme() },
+    {
+      key: "s",
+      label: "Toggle Sidebar",
+      description: "Show/hide surah sidebar",
+      action: () => {
+        const wasVisible = showSidebar();
+        setShowSidebar((prev) => !prev);
+        if (wasVisible && focusedPanel() === "sidebar") setFocusedPanel("arabic");
+        if (!wasVisible) setFocusedPanel("sidebar");
+      },
+    },
+    {
+      key: "B",
+      label: "Toggle Panel",
+      description: "Show/hide activity panel",
+      action: () => {
+        const wasVisible = showPanel();
+        setShowPanel((prev) => !prev);
+        if (wasVisible && focusedPanel() === "panel") setFocusedPanel("arabic");
+        if (!wasVisible) {
+          refreshPanelData();
+          setFocusedPanel("panel");
+        }
+      },
+    },
+    { key: "+", label: "Increase Spacing", description: "Increase verse spacing", action: () => setVerseSpacing((prev) => Math.min(prev + 1, 5)) },
+    { key: "-", label: "Decrease Spacing", description: "Decrease verse spacing", action: () => setVerseSpacing((prev) => Math.max(prev - 1, 0)) },
+    {
+      key: "b",
+      label: "Toggle Bookmark",
+      description: "Bookmark current verse",
+      action: () => {
+        const surahId = selectedSurahId();
+        const ayahId = currentVerseId();
+        const verseRef = `${surahId}:${ayahId}`;
+        try {
+          toggleBookmark(surahId, ayahId, verseRef);
+          refreshBookmarks();
+          if (showPanel()) refreshPanelData();
+        } catch {
+          /* DB may not be available */
+        }
+      },
+    },
+    {
+      key: "R",
+      label: "Add Reflection",
+      description: "Add/edit reflection for current verse",
+      action: () => {
+        const surahId = selectedSurahId();
+        const ayahId = currentVerseId();
+        try {
+          const existing = getReflection(surahId, ayahId);
+          setReflectionInput(existing ? existing.note : "");
+          setShowReflectionDialog(true);
+        } catch {
+          /* DB */
+        }
+      },
+    },
+    { key: "Tab", label: "Cycle Focus", description: "Move focus between panes", action: () => cycleFocus() },
+    {
+      key: "/",
+      label: "Search",
+      description: "Search verses",
+      action: () => {
+        setIsSearchMode(true);
+        setSearchInput("");
+        setFocusedPanel("arabic");
+      },
+    },
+    { key: "?", label: "Help", description: "Show keyboard shortcuts", action: () => setShowHelp(true) },
+    { key: "q", label: "Quit", description: "Exit application", action: () => process.exit(0) },
+  ];
 
   const refreshBookmarks = () => {
     try {
@@ -111,6 +210,37 @@ const AppContent: Component = () => {
     }
 
     const onKeyPress = (str: string, key: any) => {
+      // Ctrl+P: toggle command palette
+      if (key && key.ctrl && key.name === "p") {
+        setShowPalette((prev) => !prev);
+        setPaletteIndex(0);
+        return;
+      }
+
+      if (showPalette()) {
+        if (key && key.name === "escape") {
+          setShowPalette(false);
+          return;
+        }
+        if (str === "j" || (key && key.name === "down")) {
+          setPaletteIndex((prev) => (prev + 1) % paletteCommands.length);
+          return;
+        }
+        if (str === "k" || (key && key.name === "up")) {
+          setPaletteIndex((prev) => (prev - 1 + paletteCommands.length) % paletteCommands.length);
+          return;
+        }
+        if (key && key.name === "return") {
+          const cmd = paletteCommands[paletteIndex()];
+          if (cmd) {
+            cmd.action();
+            setShowPalette(false);
+          }
+          return;
+        }
+        return;
+      }
+
       if (showReflectionDialog()) {
         if (key && key.name === "escape") {
           setShowReflectionDialog(false);
@@ -458,6 +588,11 @@ const AppContent: Component = () => {
           </box>
         </Show>
         <HelpDialog visible={showHelp()} />
+        <CommandPalette
+          visible={showPalette()}
+          commands={paletteCommands}
+          selectedIndex={paletteIndex()}
+        />
         <ReflectionDialog
           visible={showReflectionDialog()}
           verseRef={`${selectedSurahId()}:${currentVerseId()}`}

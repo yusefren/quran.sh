@@ -68,12 +68,18 @@ quran
 | `↑/↓` or `j/k` | Navigate surahs or verses |
 | `Enter` | Select surah (in sidebar) |
 | `b` | Toggle bookmark on current verse |
+| `R` | Add reflection (bookmark with note) |
+| `1-9` | Jump to quick-navigation cue |
+| `! to (` | Set cue 1-9 (Shift+1-9) |
 | `a` | Toggle Arabic pane |
 | `t` | Toggle Translation pane |
 | `r` | Toggle Transliteration pane |
 | `l` | Cycle translation language |
+| `D` | Cycle light/dark mode |
 | `T` | Cycle theme (Madinah, Mamluk, Ottoman, Safavid, Andalusian, Maghribi, Umayyad, Abbasid, Fatimid, Seljuk, Mughal) |
+| `Ctrl+P` | Open command palette |
 | `s` | Toggle sidebar |
+| `B` | Toggle right panel (Bookmarks/Cues/Reflections) |
 | `+`/`-` | Increase/decrease verse spacing |
 | `/` | Search verses |
 | `?` | Show/hide help dialog |
