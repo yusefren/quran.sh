@@ -26,6 +26,7 @@ export const CommandPalette: FC<CommandPaletteProps> = (props) => {
       width="60%"
       height="70%"
       borderStyle={theme.borderStyleFocused}
+      customBorderChars={theme.borderChars}
       borderColor={theme.colors.header}
       flexDirection="column"
       padding={1}

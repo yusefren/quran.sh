@@ -41,6 +41,7 @@ export const HelpDialog: FC<HelpDialogProps> = (props) => {
       width="70%"
       height="80%"
       borderStyle={theme.borderStyleFocused}
+      customBorderChars={theme.borderChars}
       borderColor={theme.colors.header}
       flexDirection="column"
       padding={1}

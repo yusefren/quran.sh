@@ -61,6 +61,7 @@ export const SurahList: FC<SurahListProps> = (props) => {
       <box
         height={3}
         borderStyle={theme.borderStyle}
+        customBorderChars={theme.borderChars}
         borderColor={searchFocused ? theme.colors.highlight : theme.colors.border}
         padding={0}
       >

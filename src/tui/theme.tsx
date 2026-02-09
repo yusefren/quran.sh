@@ -158,6 +158,11 @@ export const mamlukTheme: Theme = {
   description: "Geometric monumentality \u2014 lapis & gold",
   borderStyle: "single",
   borderStyleFocused: "heavy",
+  borderChars: {
+    topLeft: "╔", topRight: "╗", bottomLeft: "╚", bottomRight: "╝",
+    horizontal: "═", vertical: "║",
+    topT: "╦", bottomT: "╩", leftT: "╠", rightT: "╣", cross: "╬",
+  },
   ornaments: {
     verseMarker: "\u25B8",
     bookmarkIcon: "\u2726",
@@ -202,6 +207,11 @@ export const ottomanTheme: Theme = {
   description: "Zencirek chain borders \u2014 cobalt & gold",
   borderStyle: "single",
   borderStyleFocused: "double",
+  borderChars: {
+    topLeft: "╒", topRight: "╕", bottomLeft: "╘", bottomRight: "╛",
+    horizontal: "═", vertical: "│",
+    topT: "╤", bottomT: "╧", leftT: "╞", rightT: "╡", cross: "╪",
+  },
   ornaments: {
     verseMarker: "\u276F",
     bookmarkIcon: "\u2605",
@@ -246,6 +256,11 @@ export const safavidTheme: Theme = {
   description: "Cloud-band florals \u2014 azure & rose",
   borderStyle: "rounded",
   borderStyleFocused: "rounded",
+  borderChars: {
+    topLeft: "╭", topRight: "╮", bottomLeft: "╰", bottomRight: "╯",
+    horizontal: "─", vertical: "│",
+    topT: "┬", bottomT: "┴", leftT: "├", rightT: "┤", cross: "┼",
+  },
   ornaments: {
     verseMarker: "\u2740",
     bookmarkIcon: "\u273F",
@@ -290,6 +305,11 @@ export const andalusianTheme: Theme = {
   description: "Zellige geometry \u2014 azurite & terracotta",
   borderStyle: "single",
   borderStyleFocused: "heavy",
+  borderChars: {
+    topLeft: "┌", topRight: "┐", bottomLeft: "└", bottomRight: "┘",
+    horizontal: "─", vertical: "│",
+    topT: "┬", bottomT: "┴", leftT: "├", rightT: "┤", cross: "┼",
+  },
   ornaments: {
     verseMarker: "\u25B9",
     bookmarkIcon: "\u2736",
@@ -334,6 +354,11 @@ export const maghribiTheme: Theme = {
   description: "Braided knotwork \u2014 indigo & ochre",
   borderStyle: "single",
   borderStyleFocused: "double",
+  borderChars: {
+    topLeft: "╓", topRight: "╖", bottomLeft: "╙", bottomRight: "╜",
+    horizontal: "─", vertical: "║",
+    topT: "╥", bottomT: "╨", leftT: "╟", rightT: "╢", cross: "╫",
+  },
   ornaments: {
     verseMarker: "\u25B6",
     bookmarkIcon: "\u2734",
@@ -376,6 +401,11 @@ export const madinahTheme: Theme = {
   description: "Spiritual green \u2014 the classic default",
   borderStyle: "rounded",
   borderStyleFocused: "heavy",
+  borderChars: {
+    topLeft: "╭", topRight: "╮", bottomLeft: "╰", bottomRight: "╯",
+    horizontal: "─", vertical: "│",
+    topT: "┬", bottomT: "┴", leftT: "├", rightT: "┤", cross: "┼",
+  },
   ornaments: {
     verseMarker: "\u25B8",
     bookmarkIcon: "\u2605",
@@ -420,6 +450,11 @@ export const umayyadTheme: Theme = {
   description: "Desert austerity \u2014 gold & vermilion",
   borderStyle: "single",
   borderStyleFocused: "heavy",
+  borderChars: {
+    topLeft: "┌", topRight: "┐", bottomLeft: "└", bottomRight: "┘",
+    horizontal: "─", vertical: "│",
+    topT: "┬", bottomT: "┴", leftT: "├", rightT: "┤", cross: "┼",
+  },
   ornaments: {
     verseMarker: "\u25B8",
     bookmarkIcon: "\u2726",
@@ -464,6 +499,11 @@ export const abbasidTheme: Theme = {
   description: "Golden Age splendour \u2014 lapis & emerald",
   borderStyle: "single",
   borderStyleFocused: "heavy",
+  borderChars: {
+    topLeft: "╔", topRight: "╗", bottomLeft: "╚", bottomRight: "╝",
+    horizontal: "═", vertical: "║",
+    topT: "╦", bottomT: "╩", leftT: "╠", rightT: "╣", cross: "╬",
+  },
   ornaments: {
     verseMarker: "\u25B8",
     bookmarkIcon: "\u2726",
@@ -508,6 +548,11 @@ export const fatimidTheme: Theme = {
   description: "Shamsa medallions \u2014 gold on indigo",
   borderStyle: "rounded",
   borderStyleFocused: "heavy",
+  borderChars: {
+    topLeft: "╭", topRight: "╮", bottomLeft: "╰", bottomRight: "╯",
+    horizontal: "─", vertical: "│",
+    topT: "┬", bottomT: "┴", leftT: "├", rightT: "┤", cross: "┼",
+  },
   ornaments: {
     verseMarker: "\u25B9",
     bookmarkIcon: "\u2739",
@@ -552,6 +597,11 @@ export const seljukTheme: Theme = {
   description: "Kufic frieze \u2014 turquoise & cobalt",
   borderStyle: "single",
   borderStyleFocused: "heavy",
+  borderChars: {
+    topLeft: "┏", topRight: "┓", bottomLeft: "┗", bottomRight: "┛",
+    horizontal: "━", vertical: "┃",
+    topT: "┳", bottomT: "┻", leftT: "┣", rightT: "┫", cross: "╋",
+  },
   ornaments: {
     verseMarker: "\u25BA",
     bookmarkIcon: "\u2736",
@@ -596,6 +646,11 @@ export const mughalTheme: Theme = {
   description: "Layered florals \u2014 gold, red & rose",
   borderStyle: "double",
   borderStyleFocused: "heavy",
+  borderChars: {
+    topLeft: "╔", topRight: "╗", bottomLeft: "╚", bottomRight: "╝",
+    horizontal: "═", vertical: "║",
+    topT: "╦", bottomT: "╩", leftT: "╠", rightT: "╣", cross: "╬",
+  },
   ornaments: {
     verseMarker: "\u25B8",
     bookmarkIcon: "\u2740",

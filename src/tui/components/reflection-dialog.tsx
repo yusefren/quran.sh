@@ -23,6 +23,7 @@ export const ReflectionDialog: FC<ReflectionDialogProps> = (props) => {
       width="60%"
       height="40%"
       borderStyle={theme.borderStyleFocused}
+      customBorderChars={theme.borderChars}
       borderColor={theme.colors.secondary}
       flexDirection="column"
       padding={1}
