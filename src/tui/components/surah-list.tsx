@@ -1,11 +1,11 @@
-import { type FC, useState, useMemo, useRef, useCallback } from "react";
+import { type FC, useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useKeyboard } from "@opentui/react";
 import { getSurah, TOTAL_SURAHS } from "../../data/quran";
 import { useTheme } from "../theme";
 
 export interface SurahListProps {
   onSelect?: (surahId: number) => void;
-  initialSelectedId?: number;
+  selectedId?: number;
   focused?: boolean;
   disabled?: boolean;
 }
@@ -42,8 +42,16 @@ export const SurahList: FC<SurahListProps> = (props) => {
   }, [searchQuery, allOptions]);
 
   const [selectedIndex, setSelectedIndex] = useState(
-    props.initialSelectedId ? props.initialSelectedId - 1 : 0
+    props.selectedId ? props.selectedId - 1 : 0
   );
+
+  // Sync selection when external navigation changes the surah (bookmarks, cues, etc.)
+  useEffect(() => {
+    if (props.selectedId !== undefined) {
+      const idx = filteredOptions.findIndex(opt => opt.value === props.selectedId);
+      if (idx >= 0) setSelectedIndex(idx);
+    }
+  }, [props.selectedId, filteredOptions]);
 
   const isFocused = !props.disabled && (props.focused ?? true);
 

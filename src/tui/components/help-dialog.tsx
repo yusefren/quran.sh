@@ -56,11 +56,11 @@ export const HelpDialog: FC<HelpDialogProps> = (props) => {
         </text>
       </box>
 
-      <box flexDirection="column" flexGrow={1}>
+      <box flexDirection="column" flexGrow={1} overflow="hidden">
         {shortcuts.map((s) => (
-          <box key={s.key} marginBottom={0}>
-            <text color={theme.colors.secondary} bold width={15}>
-              {s.key}
+          <box key={s.key} flexDirection="row">
+            <text color={theme.colors.secondary} bold width={16}>
+              {`  ${s.key}`}
             </text>
             <text color={theme.colors.text}>
               {s.desc}

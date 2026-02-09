@@ -79,7 +79,7 @@ export const Reader: FC<ReaderProps> = (props) => {
 
   const surahLabel = useMemo(() => {
     if (!surah) return "Reader";
-    return `${theme.ornaments.headerLeft} ${surah.transliteration} ${theme.ornaments.headerRight}`;
+    return `${theme.ornaments.headerLeft} ${surah.id}. ${surah.transliteration} · ${surah.translation} ${theme.ornaments.headerRight}`;
   }, [surah, theme.ornaments.headerLeft, theme.ornaments.headerRight]);
 
   const showTranslation = props.showTranslation ?? true;
@@ -152,7 +152,7 @@ export const Reader: FC<ReaderProps> = (props) => {
               alignItems={mode === "arabic" ? "flex-end" : "flex-start"}
             >
               <text color={verseNumColor} bold>
-                {marker} [{surah.id}:{v.id}]{isBookmarked ? <span color={bookmarkColor}>{bookmark}</span> : ""}
+                {marker} {v.id}{isBookmarked ? <span color={bookmarkColor}>{bookmark}</span> : ""}
               </text>
               <text color={textColor} bold={mode === "arabic"}>
                 {textContent}

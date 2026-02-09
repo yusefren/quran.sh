@@ -568,7 +568,7 @@ const AppContent: FC = () => {
                     // DB may not be available
                   }
                 }}
-                initialSelectedId={selectedSurahId}
+                selectedId={selectedSurahId}
                 focused={focusedPanel === "sidebar"}
                 disabled={anyModalOpen}
               />
