@@ -5,7 +5,7 @@
   "module": "src/index.ts",
   "type": "module",
   "bin": {
-    "quran": "./src/index.ts"
+    "quran": "./dist/quran"
   },
   "keywords": [
     "quran",
@@ -24,7 +24,8 @@
   "bugs": "https://github.com/smashah/quran.sh/issues",
   "homepage": "https://github.com/smashah/quran.sh",
   "scripts": {
-    "test": "bun test"
+    "test": "bun test",
+    "build": "bun build --compile --minify --sourcemap --format esm ./src/index.ts --outfile ./dist/quran"
   },
   "devDependencies": {
     "@types/bun": "latest",

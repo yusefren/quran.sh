@@ -1,0 +1,22 @@
+# Development
+notes/
+demos/
+scripts/
+test/
+.sisyphus/
+.git/
+
+# Files
+rtl-test.tsx
+test.txt
+bunfig.toml
+bun.lock
+tsconfig.json
+AGENTS.md
+.DS_Store
+.gitignore
+
+# Source (compiled binary is in dist/)
+src/
+migrations/
+node_modules/
