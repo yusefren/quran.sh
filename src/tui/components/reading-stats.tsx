@@ -5,6 +5,7 @@ import { useTheme } from "../theme";
 
 export interface ReadingStatsProps {
   sessionStart: string;
+  focused?: boolean;
 }
 
 export function ReadingStats(props: ReadingStatsProps) {
@@ -37,7 +38,7 @@ export function ReadingStats(props: ReadingStatsProps) {
       flexDirection="column"
       borderStyle={theme.borderStyle}
       customBorderChars={theme.borderChars}
-      borderColor={theme.colors.border}
+      borderColor={props.focused ? theme.colors.borderFocused : theme.colors.border}
       width="100%"
       height="100%"
     >
@@ -45,7 +46,7 @@ export function ReadingStats(props: ReadingStatsProps) {
         options={tabOptions}
         onChange={(index: number) => setPeriodIndex(index)}
         onSelect={(index: number) => setPeriodIndex(index)}
-        focused={false}
+        focused={props.focused ?? false}
       />
       <box flexDirection="column" paddingLeft={1} paddingRight={1}>
         {rows.map((row) => (

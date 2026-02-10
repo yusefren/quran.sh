@@ -10,6 +10,7 @@ export function HelpDialog(props: HelpDialogProps) {
 
   const shortcuts = [
     { key: "Tab", desc: "Cycle focus (Sidebar \u2192 Arabic \u2192 Translation \u2192 Translit)" },
+    { key: "Shift+Tab", desc: "Cycle sidebar focus (Surah List \u2194 Reading Stats)" },
     { key: "\u2191/\u2193 j/k", desc: "Navigate surahs or verses" },
     { key: "Enter", desc: "Select surah (in Sidebar)" },
     { key: "b", desc: "Toggle bookmark (in Reader)" },

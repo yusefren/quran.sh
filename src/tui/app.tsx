@@ -66,6 +66,7 @@ function AppContent() {
 
   const [selectedSurahId, setSelectedSurahId] = useState(savedPrefs.selectedSurahId);
   const [focusedPanel, setFocusedPanel] = useState<FocusablePane>("sidebar");
+  const [sidebarSubFocus, setSidebarSubFocus] = useState<"surahList" | "stats">("surahList");
   const [currentVerseId, setCurrentVerseId] = useState(savedPrefs.currentVerseId);
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<Set<number>>(new Set());
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -405,9 +406,15 @@ function AppContent() {
       return;
     }
 
-    // When sidebar is focused, only allow Tab and Ctrl+P — skip everything else
+    // When sidebar is focused, only allow Tab, Shift+Tab, and Ctrl+P — skip everything else
     if (sidebarActive) {
+      if (key.name === 'tab' && key.shift) {
+        // Shift+Tab: cycle sub-focus within sidebar (stats ↔ surahList)
+        setSidebarSubFocus((prev) => prev === "surahList" ? "stats" : "surahList");
+        return;
+      }
       if (key.name === 'tab') {
+        setSidebarSubFocus("surahList"); // reset sub-focus when leaving sidebar
         cycleFocus();
       }
       return;
@@ -669,7 +676,10 @@ function AppContent() {
               <StreakChart />
             </box>
             <box height="15%">
-              <ReadingStats sessionStart={sessionStartRef.current} />
+              <ReadingStats
+                sessionStart={sessionStartRef.current}
+                focused={focusedPanel === "sidebar" && sidebarSubFocus === "stats"}
+              />
             </box>
             <box height="65%">
               <SurahList
@@ -689,7 +699,7 @@ function AppContent() {
                   }
                 }}
                 selectedId={selectedSurahId}
-                focused={focusedPanel === "sidebar"}
+                focused={focusedPanel === "sidebar" && sidebarSubFocus === "surahList"}
                 disabled={anyModalOpen}
               />
             </box>
