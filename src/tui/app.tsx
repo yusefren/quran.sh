@@ -4,6 +4,7 @@ import { Layout } from "./components/layout";
 import { RouteProvider } from "./router";
 import { SurahList } from "./components/surah-list";
 import { StreakChart } from "./components/streak-chart";
+import { ReadingStats } from "./components/reading-stats";
 import { Reader } from "./components/reader";
 import { HelpDialog } from "./components/help-dialog";
 import { Panel } from "./components/panel";
@@ -174,6 +175,7 @@ function AppContent() {
 
   // We use refs to access latest state inside the keyboard handler
   // (avoids stale closures without needing to list every state var as dep)
+  const sessionStartRef = useRef(new Date().toISOString());
   const stateRef = useRef({
     selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
@@ -663,10 +665,13 @@ function AppContent() {
         panelFocused={focusedPanel === "panel"}
         sidebar={
           <box flexDirection="column" height="100%">
-            <box height="25%">
+            <box height="20%">
               <StreakChart />
             </box>
-            <box height="75%">
+            <box height="15%">
+              <ReadingStats sessionStart={sessionStartRef.current} />
+            </box>
+            <box height="65%">
               <SurahList
                 onSelect={(id) => {
                   const s = stateRef.current;
