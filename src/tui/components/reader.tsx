@@ -129,7 +129,11 @@ export function Reader(props: ReaderProps) {
           margin="auto"
           focusable={true}
           focused={focused}
-          scrollY={true}
+          scrollbarOptions={
+            {
+              visible:false,
+            }
+          }
           flexDirection="column"
           overflow="hidden"
           alignItems={containerAlign}
@@ -153,6 +157,11 @@ export function Reader(props: ReaderProps) {
         focusable={true}
         focused={focused}
         scrollY={true}
+          scrollbarOptions={
+            {
+              visible:false,
+            }
+          }
         flexDirection="column"
         overflow="hidden"
         alignItems={containerAlign}
@@ -220,6 +229,8 @@ export function Reader(props: ReaderProps) {
       focusable={true}
       focused={isAnyReaderFocused}
       scrollY={true}
+      flexDirection="column"
+      showScrollbar={false}
       flexDirection="column"
       overflow="hidden"
       borderStyle={theme.borderStyle}
