@@ -66,7 +66,16 @@ export function Reader(props: ReaderProps) {
   const paneTitle = (label: string, focused: boolean, extra?: string) => {
     const icon = focused ? ` ${theme.ornaments.focusIcon} ` : " ";
     const suffix = extra ? ` ${extra} ` : " ";
-    return `${icon}${label}${suffix}`;
+    // Build progress bar from current verse position
+    const totalVerses = surah?.verses.length ?? 0;
+    const currentVerse = props.currentVerseId ?? 1;
+    if (totalVerses === 0) return `${icon}${label}${suffix}`;
+    const barWidth = 10;
+    const filled = Math.round((currentVerse / totalVerses) * barWidth);
+    const empty = barWidth - filled;
+    const bar = theme.ornaments.progressFilled.repeat(filled) + theme.ornaments.progressEmpty.repeat(empty);
+    const pct = Math.round((currentVerse / totalVerses) * 100);
+    return `${icon}${label}${suffix}${bar} ${pct}% `;
   };
 
   const searchTitle = () => {
@@ -126,11 +135,6 @@ export function Reader(props: ReaderProps) {
           alignItems={containerAlign}
           backgroundColor={theme.colors.background}
           viewportCulling={true}
-          verticalScrollbarOptions={{
-            trackOptions: {
-              foregroundColor: theme.colors.border,
-            },
-          }}
         >
           <box maxWidth={arabicWidth} paddingLeft={2} paddingRight={2}>
             <text fg={theme.colors.arabic} attributes={TextAttributes.BOLD}>
@@ -154,11 +158,6 @@ export function Reader(props: ReaderProps) {
         alignItems={containerAlign}
         backgroundColor={theme.colors.background}
                 viewportCulling={true}
-                verticalScrollbarOptions={{
-                  trackOptions: {
-                    foregroundColor: theme.colors.border,
-                  },
-                }}
               >
                 {surah.verses.map((v) => {
 

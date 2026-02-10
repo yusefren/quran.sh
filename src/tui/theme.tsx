@@ -28,6 +28,10 @@ export interface ThemeOrnaments {
   focusIcon: string;
   /** Scrollbar thumb character */
   scrollbarThumb: string;
+  /** Progress bar filled character */
+  progressFilled: string;
+  /** Progress bar empty character */
+  progressEmpty: string;
 }
 
 export interface ThemeColors {
@@ -173,6 +177,8 @@ export const mamlukTheme: Theme = {
     bullet: "\u25A0",
     focusIcon: "\u25C6",
     scrollbarThumb: "\u25A0",
+    progressFilled: "\u2593",
+    progressEmpty: "\u2591",
   },
   colors: {
     primary: "#1E3A8A",        // Lapis lazuli blue
@@ -222,6 +228,8 @@ export const ottomanTheme: Theme = {
     bullet: "\u25C8",
     focusIcon: "\u25C6",
     scrollbarThumb: "\u25C8",
+    progressFilled: "\u25C8",
+    progressEmpty: "\u25C7",
   },
   colors: {
     primary: "#0A2342",        // Navy cobalt
@@ -271,6 +279,8 @@ export const safavidTheme: Theme = {
     bullet: "\u2727",
     focusIcon: "\u2756",
     scrollbarThumb: "\u2727",
+    progressFilled: "\u2726",
+    progressEmpty: "\u2727",
   },
   colors: {
     primary: "#4169E1",        // Cloud-band royal blue
@@ -320,6 +330,8 @@ export const andalusianTheme: Theme = {
     bullet: "\u25C7",
     focusIcon: "\u25C6",
     scrollbarThumb: "\u2736",
+    progressFilled: "\u2736",
+    progressEmpty: "\u2737",
   },
   colors: {
     primary: "#1C39BB",        // Alhambra azurite blue
@@ -369,6 +381,8 @@ export const maghribiTheme: Theme = {
     bullet: "\u25AA",
     focusIcon: "\u25C6",
     scrollbarThumb: "\u2734",
+    progressFilled: "\u2734",
+    progressEmpty: "\u2735",
   },
   colors: {
     primary: "#003366",        // Moroccan indigo blue
@@ -416,6 +430,8 @@ export const madinahTheme: Theme = {
     bullet: "\u25CF",
     focusIcon: "\u25C6",
     scrollbarThumb: "\u06DE",
+    progressFilled: "\u25CF",
+    progressEmpty: "\u25CB",
   },
   colors: {
     primary: "#2E7D32",
@@ -465,6 +481,8 @@ export const umayyadTheme: Theme = {
     bullet: "\u25CF",
     focusIcon: "\u25C6",
     scrollbarThumb: "\u06DE",
+    progressFilled: "\u25CF",
+    progressEmpty: "\u25CB",
   },
   colors: {
     primary: "#B8860B",        // Dark goldenrod — desert gold
@@ -514,6 +532,8 @@ export const abbasidTheme: Theme = {
     bullet: "\u25A0",
     focusIcon: "\u25C6",
     scrollbarThumb: "\u2593",
+    progressFilled: "\u2588",
+    progressEmpty: "\u2591",
   },
   colors: {
     primary: "#1A237E",        // Deep lapis lazuli
@@ -563,6 +583,8 @@ export const fatimidTheme: Theme = {
     bullet: "\u25C9",
     focusIcon: "\u2756",
     scrollbarThumb: "\u06DE",
+    progressFilled: "\u25C6",
+    progressEmpty: "\u25C7",
   },
   colors: {
     primary: "#191970",        // Midnight blue / deep indigo
@@ -612,6 +634,8 @@ export const seljukTheme: Theme = {
     bullet: "\u25AA",
     focusIcon: "\u25C6",
     scrollbarThumb: "\u25AA",
+    progressFilled: "\u25AA",
+    progressEmpty: "\u25AB",
   },
   colors: {
     primary: "#00838F",        // Deep turquoise
@@ -661,6 +685,8 @@ export const mughalTheme: Theme = {
     bullet: "\u2727",
     focusIcon: "\u2756",
     scrollbarThumb: "\u2727",
+    progressFilled: "\u2726",
+    progressEmpty: "\u2727",
   },
   colors: {
     primary: "#8B0000",        // Deep Mughal red
