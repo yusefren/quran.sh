@@ -154,6 +154,7 @@ export function Reader(props: ReaderProps) {
         ref={(el: any) => { scrollRefs.current[mode] = el; }}
         width="100%"
         height="100%"
+        padding="2%"
         focusable={true}
         focused={focused}
         scrollY={true}
