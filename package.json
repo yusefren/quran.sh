@@ -1,11 +1,11 @@
 {
   "name": "quran.sh",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A fast, offline-first Quran CLI and TUI reader",
   "module": "src/index.ts",
   "type": "module",
   "bin": {
-    "quran": "./dist/index.js"
+    "quran": "dist/index.js"
   },
   "keywords": [
     "quran",
@@ -19,7 +19,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/smashah/quran.sh.git"
+    "url": "git+https://github.com/smashah/quran.sh.git"
   },
   "bugs": "https://github.com/smashah/quran.sh/issues",
   "homepage": "https://github.com/smashah/quran.sh",
