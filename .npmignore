@@ -5,10 +5,21 @@ scripts/
 test/
 .sisyphus/
 .git/
+.codenomad/
+
+# Source (bundled output is in dist/)
+src/
+
+# Tests in src/
+src/data/__tests__/
+
+# Build output (compiled binary, not for npm)
+dist/quran
 
 # Files
 rtl-test.tsx
 test.txt
+build.ts
 bunfig.toml
 bun.lock
 tsconfig.json
@@ -16,7 +27,6 @@ AGENTS.md
 .DS_Store
 .gitignore
 
-# Source (compiled binary is in dist/)
-src/
+# Data
 migrations/
 node_modules/

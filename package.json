@@ -5,7 +5,7 @@
   "module": "src/index.ts",
   "type": "module",
   "bin": {
-    "quran": "./dist/quran"
+    "quran": "./dist/index.js"
   },
   "keywords": [
     "quran",
@@ -24,19 +24,16 @@
   "bugs": "https://github.com/smashah/quran.sh/issues",
   "homepage": "https://github.com/smashah/quran.sh",
   "scripts": {
-    "test": "bun test",
-    "build": "bun build --compile --minify --sourcemap --format esm ./src/index.ts --outfile ./dist/quran"
+    "build": "bun build --minify --target bun ./src/index.ts --outdir ./dist",
+    "build:binary": "bun build --compile --minify --sourcemap --format esm ./src/index.ts --outfile ./dist/quran",
+    "prepublishOnly": "bun run build",
+    "test": "bun test"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/react": "^19.0.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
     "@opentui/core": "^0.1.77",
     "@opentui/react": "^0.1.77",
+    "@types/bun": "latest",
+    "@types/react": "^19.0.0",
     "arabic-reshaper": "^1.1.0",
     "bidi-js": "^1.0.3",
     "quran-json": "^3.1.2",
