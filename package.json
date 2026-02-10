@@ -29,6 +29,9 @@
     "prepublishOnly": "bun run build",
     "test": "bun test"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@opentui/core": "^0.1.77",
     "@opentui/react": "^0.1.77",
