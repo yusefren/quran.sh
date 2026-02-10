@@ -7,31 +7,50 @@
 
 ## Features
 
-- **Offline-First**: All data bundled, works without internet
-- **Fast CLI**: Quick verse lookup (`quran read 2:255`)
-- **Multi-Pane TUI**: Arabic top, Translation + Transliteration split below
-- **Toggleable Sidebar**: Press `s` to show/hide the surah list
-- **Rich Colors**: Gold Arabic, teal transliteration, green accents
-- **Dynasty Themes**: 11 themes inspired by Islamic manuscript illumination (Madinah, Mamluk, Ottoman, Safavid, Andalusian, Maghribi, Umayyad, Abbasid, Fatimid, Seljuk, Mughal) — press `T` to cycle
-- **Focus Indicators**: Heavy borders + diamond icon on focused pane
-- **Verse Spacing**: `+`/`-` to adjust spacing between verses
-- **Cues**: Quick-navigation slots (1–9) for instant jumping
-- **Reflections**: Personal notes attached to verses
-- **Activity Panel**: Toggleable side panel for bookmarks, cues, and reflections
-- **Light/Dark Mode**: Automatic detection + manual toggle (`D`)
-- **Progress Tracking**: Reading logs and streak tracking
-- **Bookmarks**: Mark and revisit favorite verses
-- **Search**: Full-text search across all translations
-- **Multi-Language**: Cycle through translation languages
+### 📚 Reading
+- **Offline-First** — All data bundled, works without internet
+- **Multi-Pane Reader** — Arabic (top), Translation + Transliteration (split below)
+- **10 Languages** — Bengali, English, Spanish, French, Indonesian, Russian, Swedish, Turkish, Urdu, Chinese — press `l` to cycle
+- **Arabic Text Shaping** — Proper connected Arabic rendering via `arabic-reshaper`
+- **Verse Flow Modes** — Stacked, inline, or continuous flow — press `F` to cycle
+- **Arabic Layout** — Configurable alignment (`A`) and width (`W`)
+
+### 🎨 Design
+- **12 Dynasty Themes** — Mamluk, Ottoman, Safavid, Andalusian, Maghribi, Madinah, Umayyad, Abbasid, Fatimid, Seljuk, Mughal — each with unique ornaments, borders and color palettes inspired by Islamic manuscript illumination
+- **Light & Dark Mode** — Auto-detection + manual toggle
+- **Themed Progress Bars** — Custom ASCII progress indicators in title bars using dynasty-specific ornament characters
+- **Focus Indicators** — Heavy borders + diamond icon on the focused pane
+
+### 🔖 Study Tools
+- **Bookmarks** — Mark and revisit favorite verses
+- **Cues** — 9 quick-navigation slots (1–9) for instant jumping
+- **Reflections** — Personal notes attached to any verse
+- **Activity Panel** — Toggleable right panel listing all bookmarks, cues, and reflections
+- **Full-Text Search** — Search across all translations with `/`
+- **Command Palette** — Quick access to all commands with `Ctrl+P`
+
+### 📊 Progress Tracking
+- **Reading Mode** — Toggle between browsing (no tracking) and reading (tracks every verse) with `m`
+- **Surah Completion** — When navigating away from a surah in reading mode, prompted to mark it as complete
+- **Reading Stats** — Sidebar widget showing verses read, unique verses, surahs touched, and surahs completed — filterable by Today, Week, Month, All Time, and Session
+- **Streak Tracking** — Current streak, longest streak, and total reading days via CLI
+- **Verse Logging** — Log individual verses or full surahs as read via CLI
+
+### 💾 Persistence
+- **SQLite Database** — All bookmarks, cues, reflections, reading logs, and preferences stored locally
+- **Auto-Restore** — Selected surah, verse position, theme, language, layout, sidebar/panel visibility, and reading mode all persist across sessions
 
 ## Installation
 
 ```bash
-# Global install
-npm install -g quran.sh
+# Run directly (no install)
+bunx quran.sh
 
-# Or with Bun
+# Global install
 bun install -g quran.sh
+
+# Or with npm
+npm install -g quran.sh
 ```
 
 ## Usage
@@ -39,6 +58,9 @@ bun install -g quran.sh
 ### CLI Commands
 
 ```bash
+# Launch interactive TUI
+quran
+
 # Read a surah (by number or name)
 quran read 1
 quran read al-fatihah
@@ -57,35 +79,54 @@ quran log 2:255
 quran streak
 ```
 
-### TUI (Interactive Mode)
+### TUI Keyboard Shortcuts
 
-Simply run:
-```bash
-quran
-```
-
-**Keyboard Shortcuts:**
+#### Navigation
 
 | Key | Action |
 |-----|--------|
-| `Tab` | Cycle focus: Sidebar → Arabic → Translation → Transliteration |
+| `Tab` | Cycle focus: Sidebar → Arabic → Translation → Transliteration → Panel |
+| `Shift+Tab` | Cycle sidebar focus: Surah List ↔ Reading Stats |
 | `↑/↓` or `j/k` | Navigate surahs or verses |
 | `Enter` | Select surah (in sidebar) |
-| `b` | Toggle bookmark on current verse |
-| `R` | Add reflection (bookmark with note) |
-| `1-9` | Jump to quick-navigation cue |
-| `! to (` | Set cue 1-9 (Shift+1-9) |
+| `1-9` | Jump to cue slot |
+
+#### Pane Toggles
+
+| Key | Action |
+|-----|--------|
 | `a` | Toggle Arabic pane |
 | `t` | Toggle Translation pane |
 | `r` | Toggle Transliteration pane |
-| `l` | Cycle translation language |
-| `D` | Cycle light/dark mode |
-| `T` | Cycle theme (Madinah, Mamluk, Ottoman, Safavid, Andalusian, Maghribi, Umayyad, Abbasid, Fatimid, Seljuk, Mughal) |
-| `Ctrl+P` | Open command palette |
 | `s` | Toggle sidebar |
-| `B` | Toggle right panel (Bookmarks/Cues/Reflections) |
-| `+`/`-` | Increase/decrease verse spacing |
+| `B` | Toggle activity panel (Bookmarks / Cues / Reflections) |
+
+#### Study
+
+| Key | Action |
+|-----|--------|
+| `b` | Toggle bookmark on current verse |
+| `R` | Add/edit reflection |
+| `! to (` | Set cue 1–9 (Shift+1–9) |
 | `/` | Search verses |
+| `m` | Toggle Reading/Browsing mode |
+
+#### Display
+
+| Key | Action |
+|-----|--------|
+| `T` | Cycle dynasty theme |
+| `D` | Cycle light/dark mode |
+| `+`/`-` | Increase/decrease verse spacing |
+| `A` | Cycle Arabic alignment |
+| `W` | Cycle Arabic width |
+| `F` | Cycle verse flow mode |
+
+#### General
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+P` | Open command palette |
 | `?` | Show/hide help dialog |
 | `ESC` | Dismiss dialog / Clear search |
 | `q` | Quit |
@@ -93,7 +134,32 @@ quran
 ## Data Source
 
 - Translations from [quran-json](https://github.com/risan/quran-json)
-- 114 surahs, 6236 verses
+- 114 surahs, 6,236 verses
+- 10 languages: Bengali, English, Spanish, French, Indonesian, Russian, Swedish, Turkish, Urdu, Chinese
+
+## Development
+
+```bash
+# Clone
+git clone https://github.com/smashah/quran.sh.git
+cd quran.sh
+
+# Install dependencies
+bun install
+
+# Run TUI
+bun run src/index.ts
+
+# Run CLI
+bun run src/index.ts read 1
+
+# Run tests
+bun test
+
+# Build standalone binary
+bun run build
+# → outputs ./dist/quran
+```
 
 ## Recording Demos
 
@@ -113,26 +179,6 @@ bash demos/send-keys.sh
 terminalizer render demos/tui-full
 ```
 
-## Development
-
-```bash
-# Clone
-git clone https://github.com/smashah/quran.sh.git
-cd quran.sh
-
-# Install dependencies
-bun install
-
-# Run CLI
-bun run src/index.ts read 1
-
-# Run TUI
-bun run src/index.ts
-
-# Run tests
-bun test
-```
-
 ## License
 
 MIT © smashah
@@ -140,7 +186,8 @@ MIT © smashah
 ## Credits
 
 - Built with [Bun](https://bun.sh)
-- UI powered by [OpenTUI](https://github.com/opentui/opentui)
+- UI powered by [OpenTUI](https://github.com/nicktomlin/opentui)
+- Arabic shaping via [arabic-reshaper](https://github.com/a-patel/arabic-reshaper)
 - Data from [quran-json](https://github.com/risan/quran-json)
 
 ---
