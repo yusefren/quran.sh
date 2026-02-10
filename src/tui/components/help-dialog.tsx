@@ -31,6 +31,7 @@ export function HelpDialog(props: HelpDialogProps) {
     { key: "/", desc: "Search verses" },
     { key: "?", desc: "Show/hide this help dialog" },
     { key: "ESC", desc: "Dismiss dialog / Clear search" },
+    { key: "m", desc: "Toggle Reading/Browsing mode" },
     { key: "q", desc: "Quit application" },
   ];
 

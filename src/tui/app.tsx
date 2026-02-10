@@ -9,6 +9,7 @@ import { HelpDialog } from "./components/help-dialog";
 import { Panel } from "./components/panel";
 import type { PanelTab } from "./components/panel";
 import { ReflectionDialog } from "./components/reflection-dialog";
+import { MarkSurahDialog } from "./components/mark-surah-dialog";
 import { CommandPalette } from "./components/command-palette";
 import type { CommandItem } from "./components/command-palette";
 import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
@@ -18,6 +19,8 @@ import type { Cue } from "../data/cues";
 import { getAllReflections, addReflection, getReflection } from "../data/reflections";
 import type { Reflection } from "../data/reflections";
 import { getSurah, search, LANGUAGES } from "../data/quran";
+import { logVerse } from "../data/log";
+import { logSurah } from "../data/log";
 import { getPreference, setPreference } from "../data/preferences";
 import type { VerseRef } from "../data/quran";
 import { ThemeProvider, useTheme } from "./theme";
@@ -53,6 +56,7 @@ const savedPrefs = {
   arabicZoom: Number(loadPref("arabicZoom", "0")),
   showSidebar: loadPref("showSidebar", "true") === "true",
   showPanel: loadPref("showPanel", "false") === "true",
+  readingMode: loadPref("readingMode", "false") === "true",
 };
 
 function AppContent() {
@@ -84,6 +88,9 @@ function AppContent() {
   const [showTransliteration, setShowTransliteration] = useState(savedPrefs.showTransliteration);
   const [language, setLanguage] = useState(savedPrefs.language);
   const [flashMessage, setFlashMessage] = useState("");
+  const [readingMode, setReadingMode] = useState(savedPrefs.readingMode);
+  const [showMarkSurahDialog, setShowMarkSurahDialog] = useState(false);
+  const [pendingSurahChange, setPendingSurahChange] = useState<{ fromId: number; toId: number } | null>(null);
 
   // Persist settings whenever they change
   useEffect(() => {
@@ -100,8 +107,9 @@ function AppContent() {
       setPreference("arabicZoom", String(arabicZoom));
       setPreference("showSidebar", String(showSidebar));
       setPreference("showPanel", String(showPanel));
+      setPreference("readingMode", String(readingMode));
     } catch { /* DB may not be available in tests */ }
-  }, [selectedSurahId, currentVerseId, showArabic, showTranslation, showTransliteration, language, arabicAlign, arabicWidth, arabicFlow, arabicZoom, showSidebar, showPanel]);
+  }, [selectedSurahId, currentVerseId, showArabic, showTranslation, showTransliteration, language, arabicAlign, arabicWidth, arabicFlow, arabicZoom, showSidebar, showPanel, readingMode]);
 
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -162,7 +170,7 @@ function AppContent() {
   }, [showSidebar, showTranslation, showTransliteration, showPanel, focusedPanel]);
 
   // True when any modal/overlay is open — used to disable focus on child components
-  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode;
+  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog;
 
   // We use refs to access latest state inside the keyboard handler
   // (avoids stale closures without needing to list every state var as dep)
@@ -171,14 +179,14 @@ function AppContent() {
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
     showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
     language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
-    arabicAlign, arabicWidth, arabicFlow,
+    arabicAlign, arabicWidth, arabicFlow, readingMode,
   });
   stateRef.current = {
     selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
     showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
     language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
-    arabicAlign, arabicWidth, arabicFlow,
+    arabicAlign, arabicWidth, arabicFlow, readingMode,
   };
 
   const paletteCommands: PaletteCommand[] = [
@@ -195,6 +203,10 @@ function AppContent() {
         if (idx !== -1) setLanguage(LANGUAGES[(idx + 1) % LANGUAGES.length]!);
       },
     },
+    { key: "m", label: "Toggle Reading Mode", description: "Switch browsing/reading mode", action: () => {
+      setReadingMode(prev => !prev);
+      showFlash(stateRef.current.readingMode ? "📋 Browsing mode" : "📖 Reading mode");
+    } },
     { key: "D", label: "Cycle Mode", description: "Switch light/dark mode", action: () => cycleMode() },
     { key: "T", label: "Cycle Theme", description: "Switch dynasty theme", action: () => cycleTheme() },
     {
@@ -339,6 +351,12 @@ function AppContent() {
       if (key.name === 'escape' || key.name === 'q' || str === '?') {
         setShowHelp(false);
       }
+      return;
+    }
+
+    // MarkSurahDialog has its own useKeyboard for y/n/escape;
+    // we just need the main handler to stop processing further.
+    if (showMarkSurahDialog) {
       return;
     }
 
@@ -589,12 +607,20 @@ function AppContent() {
       if (str === 'j' || key.name === 'down') {
         const surah = getSurah(s.selectedSurahId);
         if (surah && s.currentVerseId < surah.totalVerses) {
+          const newVerse = s.currentVerseId + 1;
           setCurrentVerseId(prev => prev + 1);
+          if (s.readingMode) {
+            try { logVerse(`${s.selectedSurahId}:${newVerse}`); } catch { /* DB */ }
+          }
         }
       }
       if (str === 'k' || key.name === 'up') {
         if (s.currentVerseId > 1) {
+          const newVerse = s.currentVerseId - 1;
           setCurrentVerseId(prev => prev - 1);
+          if (s.readingMode) {
+            try { logVerse(`${s.selectedSurahId}:${newVerse}`); } catch { /* DB */ }
+          }
         }
       }
       if (str === 'b') {
@@ -609,6 +635,13 @@ function AppContent() {
       }
       if (str === 'h') {
         setShowHelp(true);
+      }
+      if (str === 'm') {
+        setReadingMode(prev => {
+          const next = !prev;
+          showFlash(next ? "📖 Reading mode" : "📋 Browsing mode");
+          return next;
+        });
       }
     }
   });
@@ -636,6 +669,12 @@ function AppContent() {
             <box height="75%">
               <SurahList
                 onSelect={(id) => {
+                  const s = stateRef.current;
+                  if (s.readingMode && s.selectedSurahId !== id) {
+                    setPendingSurahChange({ fromId: s.selectedSurahId, toId: id });
+                    setShowMarkSurahDialog(true);
+                    return;
+                  }
                   setSelectedSurahId(id);
                   setCurrentVerseId(1);
                   try {
@@ -713,6 +752,33 @@ function AppContent() {
             showFlash("Reflection saved");
           }}
           onInput={(text) => setReflectionInput(text)}
+        />
+        <MarkSurahDialog
+          visible={showMarkSurahDialog}
+          surahName={pendingSurahChange ? (getSurah(pendingSurahChange.fromId)?.transliteration ?? `Surah ${pendingSurahChange.fromId}`) : ""}
+          onConfirm={() => {
+            if (pendingSurahChange) {
+              const surah = getSurah(pendingSurahChange.fromId);
+              if (surah) {
+                try { logSurah(surah); } catch { /* DB */ }
+              }
+              setSelectedSurahId(pendingSurahChange.toId);
+              setCurrentVerseId(1);
+              try { setBookmarkedAyahs(getBookmarkedAyahs(pendingSurahChange.toId)); } catch { /* DB */ }
+              if (showPanel) refreshPanelData();
+            }
+            setShowMarkSurahDialog(false);
+            setPendingSurahChange(null);
+          }}
+          onDismiss={() => {
+            if (pendingSurahChange) {
+              setSelectedSurahId(pendingSurahChange.toId);
+              setCurrentVerseId(1);
+              try { setBookmarkedAyahs(getBookmarkedAyahs(pendingSurahChange.toId)); } catch { /* DB */ }
+            }
+            setShowMarkSurahDialog(false);
+            setPendingSurahChange(null);
+          }}
         />
       </Layout>
     </RouteProvider>

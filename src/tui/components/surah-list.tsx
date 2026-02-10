@@ -78,7 +78,6 @@ export function SurahList(props: SurahListProps) {
           placeholder=" 🔍 / to search..."
           value={searchQuery}
           focused={isFocused && searchFocused}
-          focusable={true}
           onInput={(value: string) => setSearchQuery(value)}
           onSubmit={() => {
             // Enter → return focus to the select list
@@ -104,7 +103,7 @@ export function SurahList(props: SurahListProps) {
         }}
         showScrollIndicator={true}
         showDescription={true}
-        focusable={true}
+
         focused={isFocused && !searchFocused}
         style={{
           selectedColor: theme.colors.highlight,
