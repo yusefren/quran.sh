@@ -56,6 +56,18 @@ export function isIndexReady(): boolean {
 }
 
 /**
+ * Whether a persisted index exists in the DB (without loading it).
+ * Use this to decide if the "Indexing…" toast is needed.
+ */
+export function isIndexPersisted(): boolean {
+  try {
+    return !!getPreference(INDEX_KEY);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Create a fresh searcher instance with the standard config.
  */
 function createSearcher(): DynamicSearcher<VerseRef, string> {

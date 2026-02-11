@@ -13,7 +13,7 @@ import { ReflectionDialog } from "./components/reflection-dialog";
 import { MarkSurahDialog } from "./components/mark-surah-dialog";
 import { ResetTrackingDialog } from "./components/reset-tracking-dialog";
 import { FuzzySearchDialog } from "./components/fuzzy-search-dialog";
-import { reindex, isIndexReady, ensureSearcherAsync } from "../data/fuzzy-search";
+import { reindex } from "../data/fuzzy-search";
 import { CommandPalette } from "./components/command-palette";
 import { RtlCalibrationDialog } from "./components/rtl-calibration-dialog";
 import { setRtlStrategy, getRtlStrategy, type RtlStrategy } from "./utils/rtl";
@@ -716,12 +716,6 @@ function AppContent() {
     refreshBookmarks();
     refreshPanelData();
     refreshCompletionData();
-
-    // Pre-build fuzzy search index on startup (shows toast on first load only)
-    if (!isIndexReady()) {
-      showFlash("Indexing verses…");
-      ensureSearcherAsync().then(() => showFlash("Search index ready ✓"));
-    }
   }, [showCalibration]);
 
   // Refresh read-verse data when surah changes
