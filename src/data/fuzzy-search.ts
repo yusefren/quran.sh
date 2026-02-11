@@ -4,14 +4,14 @@
  * Indexes all 6,236 verses across translation, transliteration, and Arabic text
  * using @m31coding/fuzzy-search. Lazily initialised on first query.
  *
- * The built index is persisted to SQLite via the library's Memento API so
- * subsequent app launches skip the expensive indexEntities() call.
+ * The index is built in-memory (~2 s on first search) and then reused for the
+ * rest of the session.  Persistence was removed because the 33 MB JSON
+ * round-trip through SQLite was actually *slower* than a fresh build.
  */
-import { Config, SearcherFactory, Query, Memento } from "@m31coding/fuzzy-search";
+import { Config, SearcherFactory, Query } from "@m31coding/fuzzy-search";
 import type { DynamicSearcher } from "@m31coding/fuzzy-search";
 import { createRequire } from "node:module";
 import type { VerseRef } from "./quran";
-import { getPreference, setPreference } from "./preferences";
 
 // ---------------------------------------------------------------------------
 // Raw types (same shape as quran-json)
@@ -35,12 +35,6 @@ interface RawChapter {
 }
 
 // ---------------------------------------------------------------------------
-// Persistence key
-// ---------------------------------------------------------------------------
-
-const INDEX_KEY = "fuzzy_search_index";
-
-// ---------------------------------------------------------------------------
 // Searcher singleton
 // ---------------------------------------------------------------------------
 
@@ -53,18 +47,6 @@ let _searcher: DynamicSearcher<VerseRef, string> | null = null;
  */
 export function isIndexReady(): boolean {
   return _searcher !== null;
-}
-
-/**
- * Whether a persisted index exists in the DB (without loading it).
- * Use this to decide if the "Indexing…" toast is needed.
- */
-export function isIndexPersisted(): boolean {
-  try {
-    return !!getPreference(INDEX_KEY);
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -110,72 +92,6 @@ function getTerms(e: VerseRef): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Save / Load helpers
-//
-// The Memento stores Maps and Int32Arrays internally (designed for structured
-// clone between worker threads, not JSON).  We tag them during serialisation
-// so they survive a JSON round-trip into SQLite.
-// ---------------------------------------------------------------------------
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function jsonReplacer(_key: string, value: any): any {
-  if (value instanceof Map) {
-    return { __type: "Map", data: Array.from(value.entries()) };
-  }
-  if (value instanceof Int32Array) {
-    return { __type: "Int32Array", data: Array.from(value) };
-  }
-  if (value instanceof Set) {
-    return { __type: "Set", data: Array.from(value) };
-  }
-  return value;
-}
-
-function jsonReviver(_key: string, value: any): any {
-  if (value && typeof value === "object" && value.__type) {
-    switch (value.__type) {
-      case "Map":
-        return new Map(value.data);
-      case "Int32Array":
-        return new Int32Array(value.data);
-      case "Set":
-        return new Set(value.data);
-    }
-  }
-  return value;
-}
-/* eslint-enable @typescript-eslint/no-explicit-any */
-
-function saveIndexToDb(searcher: DynamicSearcher<VerseRef, string>): void {
-  try {
-    const memento = new Memento();
-    searcher.save(memento);
-    setPreference(INDEX_KEY, JSON.stringify(memento.objects, jsonReplacer));
-  } catch {
-    // Non-fatal — we can always rebuild from scratch
-  }
-}
-
-function tryLoadFromDb(): DynamicSearcher<VerseRef, string> | null {
-  try {
-    const raw = getPreference(INDEX_KEY);
-    if (!raw) return null;
-    const objects = JSON.parse(raw, jsonReviver) as unknown[];
-    const memento = new Memento(objects);
-    const searcher = createSearcher();
-    searcher.load(memento);
-
-    // Validate: a known term must return results, otherwise the index is stale
-    const check = searcher.getMatches(new Query("bismillah", 1));
-    if (check.matches.length === 0) return null;
-
-    return searcher;
-  } catch {
-    return null;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Core init
 // ---------------------------------------------------------------------------
 
@@ -196,21 +112,9 @@ export function ensureSearcherAsync(): Promise<void> {
 function ensureSearcher(): DynamicSearcher<VerseRef, string> {
   if (_searcher) return _searcher;
 
-  // 1. Try loading from DB (fast path)
-  const cached = tryLoadFromDb();
-  if (cached) {
-    _searcher = cached;
-    return cached;
-  }
-
-  // 2. Full index build (slow path)
   const searcher = createSearcher();
   const entities = loadEntities();
-
   searcher.indexEntities(entities, (e) => e.reference, getTerms);
-
-  // Persist for next launch
-  saveIndexToDb(searcher);
 
   _searcher = searcher;
   return searcher;
@@ -232,7 +136,6 @@ export function reindex(): Promise<void> {
       const searcher = createSearcher();
       const entities = loadEntities();
       searcher.indexEntities(entities, (e) => e.reference, getTerms);
-      saveIndexToDb(searcher);
       _searcher = searcher;
 
       resolve();
