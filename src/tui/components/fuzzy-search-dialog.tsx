@@ -11,7 +11,7 @@ interface FuzzySearchDialogProps {
   onDismiss: () => void;
 }
 
-const MAX_VISIBLE = 12;
+const MAX_VISIBLE = 10;
 
 export function FuzzySearchDialog(props: FuzzySearchDialogProps) {
   const { theme } = useTheme();
@@ -110,7 +110,7 @@ export function FuzzySearchDialog(props: FuzzySearchDialogProps) {
       titleAlignment="center"
     >
       {/* Search input */}
-      <box marginBottom={1}>
+      <box marginBottom={1} flexDirection="row">
         <text fg={theme.colors.secondary} attributes={TextAttributes.BOLD}>
           {`${theme.ornaments.verseMarker} `}
         </text>
@@ -142,27 +142,23 @@ export function FuzzySearchDialog(props: FuzzySearchDialogProps) {
         </box>
       )}
 
-      {/* Results list */}
-      <box flexDirection="column" flexGrow={1}>
+      {/* Results list — key forces full re-render on scroll to prevent artifacts */}
+      <box key={`results-${windowStart}-${selectedIndex}`} flexDirection="column" flexGrow={1} overflow="hidden">
         {visibleResults.map((hit, i) => {
           const globalIndex = windowStart + i;
           const isSelected = globalIndex === selectedIndex;
           const v = hit.verse;
           const ref = `[${v.reference}]`;
           const surah = v.surahTransliteration;
-          // Truncate translation to fit
-          const maxLen = 60;
-          const translation =
-            v.translation.length > maxLen
-              ? v.translation.slice(0, maxLen) + "…"
-              : v.translation;
+          const refCol = 10;
+          const surahCol = 16;
 
           return (
-            <box key={v.reference} marginBottom={0}>
+            <box key={v.reference} flexDirection="row" marginTop={1} padding={1}>
               <text
                 fg={isSelected ? theme.colors.highlight : theme.colors.secondary}
                 attributes={isSelected ? TextAttributes.BOLD : 0}
-                width={12}
+                width={refCol}
               >
                 {isSelected ? `${theme.ornaments.verseMarker} ` : "  "}
                 {ref}
@@ -170,12 +166,15 @@ export function FuzzySearchDialog(props: FuzzySearchDialogProps) {
               <text
                 fg={isSelected ? theme.colors.highlight : theme.colors.text}
                 attributes={isSelected ? TextAttributes.BOLD : 0}
-                width={18}
+                width={surahCol}
               >
-                {` ${surah}`}
+                {surah}
               </text>
-              <text fg={isSelected ? theme.colors.text : theme.colors.muted}>
-                {` ${translation}`}
+              <text
+                fg={isSelected ? theme.colors.text : theme.colors.muted}
+                flexGrow={1}
+              >
+                {v.translation}
               </text>
             </box>
           );
