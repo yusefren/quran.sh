@@ -10,6 +10,8 @@ export interface SurahListProps {
   disabled?: boolean;
   /** Set of surah IDs that have been fully read (all-time) */
   completedSurahIds?: Set<number>;
+  /** Called when the inline search input gains/loses focus */
+  onSearchFocusChange?: (focused: boolean) => void;
 }
 
 export function SurahList(props: SurahListProps) {
@@ -66,6 +68,7 @@ export function SurahList(props: SurahListProps) {
     const str = key.sequence || key.name;
     if (str === "/") {
       setSearchFocused(true);
+      props.onSearchFocusChange?.(true);
     }
   });
 
@@ -87,6 +90,7 @@ export function SurahList(props: SurahListProps) {
           onSubmit={() => {
             // Enter → return focus to the select list
             setSearchFocused(false);
+            props.onSearchFocusChange?.(false);
           }}
         />
       </box>

@@ -79,6 +79,7 @@ function AppContent() {
   const [selectedSurahId, setSelectedSurahId] = useState(savedPrefs.selectedSurahId);
   const [focusedPanel, setFocusedPanel] = useState<FocusablePane>("sidebar");
   const [sidebarSubFocus, setSidebarSubFocus] = useState<"surahList" | "stats">("surahList");
+  const [surahSearchFocused, setSurahSearchFocused] = useState(false);
   const [currentVerseId, setCurrentVerseId] = useState(savedPrefs.currentVerseId);
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<Set<number>>(new Set());
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -442,31 +443,48 @@ function AppContent() {
     }
 
     // --- Beyond this point: global shortcuts ---
-    // When sidebar is focused, skip single-char shortcuts so SurahList
-    // can use them for its own search/filtering.
     const sidebarActive = s.focusedPanel === "sidebar";
 
-    if (key.name === 'q' && !sidebarActive) {
+    if (key.name === 'q') {
       process.exit(0);
     }
 
-    if (str === '?' && !sidebarActive) {
+    if (str === '?') {
       setShowHelp(true);
       return;
     }
 
-    // When sidebar is focused, only allow Tab, Shift+Tab, and Ctrl+P — skip everything else
-    if (sidebarActive) {
+    // When sidebar is focused AND the surah search input is active,
+    // block everything except Tab/Shift+Tab so the <input> can type freely.
+    // When sidebar is focused but search is NOT active, allow global shortcuts
+    // to pass through (the <select> only uses up/down/enter internally).
+    if (sidebarActive && surahSearchFocused) {
       if (key.name === 'tab' && key.shift) {
-        // Shift+Tab: cycle sub-focus within sidebar (stats ↔ surahList)
         setSidebarSubFocus((prev) => prev === "surahList" ? "stats" : "surahList");
         return;
       }
       if (key.name === 'tab') {
-        setSidebarSubFocus("surahList"); // reset sub-focus when leaving sidebar
+        setSidebarSubFocus("surahList");
         cycleFocus();
       }
+      if (key.name === 'escape') {
+        setSurahSearchFocused(false);
+      }
       return;
+    }
+
+    // Sidebar focused but search NOT active — allow Tab navigation
+    if (sidebarActive) {
+      if (key.name === 'tab' && key.shift) {
+        setSidebarSubFocus((prev) => prev === "surahList" ? "stats" : "surahList");
+        return;
+      }
+      if (key.name === 'tab') {
+        setSidebarSubFocus("surahList");
+        cycleFocus();
+        return;
+      }
+      // Fall through to global shortcuts below
     }
 
     if (s.focusedPanel === "panel") {
@@ -786,6 +804,7 @@ function AppContent() {
                 focused={focusedPanel === "sidebar" && sidebarSubFocus === "surahList"}
                 disabled={anyModalOpen}
                 completedSurahIds={completedSurahIds}
+                onSearchFocusChange={setSurahSearchFocused}
               />
             </box>
           </box>
