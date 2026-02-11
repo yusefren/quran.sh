@@ -32,7 +32,7 @@ export function ReflectionDialog(props: ReflectionDialogProps) {
       titleAlignment="center"
     >
       <box marginBottom={1}>
-        <text color={theme.colors.muted}>
+        <text fg={theme.colors.muted}>
           {"Type your reflection below. Press Enter to save, Esc to cancel."}
         </text>
       </box>
@@ -43,13 +43,13 @@ export function ReflectionDialog(props: ReflectionDialogProps) {
         borderColor={theme.colors.border}
         padding={1}
       >
-        <text color={theme.colors.text}>
+        <text fg={theme.colors.text}>
           {props.note}{"_"}
         </text>
       </box>
 
       <box justifyContent="center" marginTop={1}>
-        <text color={theme.colors.muted}>
+        <text fg={theme.colors.muted}>
           {"Enter: Save  Esc: Cancel  Backspace: Delete"}
         </text>
       </box>

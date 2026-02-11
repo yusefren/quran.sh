@@ -99,13 +99,46 @@ function getTerms(e: VerseRef): string[] {
 
 // ---------------------------------------------------------------------------
 // Save / Load helpers
+//
+// The Memento stores Maps and Int32Arrays internally (designed for structured
+// clone between worker threads, not JSON).  We tag them during serialisation
+// so they survive a JSON round-trip into SQLite.
 // ---------------------------------------------------------------------------
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function jsonReplacer(_key: string, value: any): any {
+  if (value instanceof Map) {
+    return { __type: "Map", data: Array.from(value.entries()) };
+  }
+  if (value instanceof Int32Array) {
+    return { __type: "Int32Array", data: Array.from(value) };
+  }
+  if (value instanceof Set) {
+    return { __type: "Set", data: Array.from(value) };
+  }
+  return value;
+}
+
+function jsonReviver(_key: string, value: any): any {
+  if (value && typeof value === "object" && value.__type) {
+    switch (value.__type) {
+      case "Map":
+        return new Map(value.data);
+      case "Int32Array":
+        return new Int32Array(value.data);
+      case "Set":
+        return new Set(value.data);
+    }
+  }
+  return value;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 function saveIndexToDb(searcher: DynamicSearcher<VerseRef, string>): void {
   try {
     const memento = new Memento();
     searcher.save(memento);
-    setPreference(INDEX_KEY, JSON.stringify(memento.objects));
+    setPreference(INDEX_KEY, JSON.stringify(memento.objects, jsonReplacer));
   } catch {
     // Non-fatal — we can always rebuild from scratch
   }
@@ -115,10 +148,15 @@ function tryLoadFromDb(): DynamicSearcher<VerseRef, string> | null {
   try {
     const raw = getPreference(INDEX_KEY);
     if (!raw) return null;
-    const objects = JSON.parse(raw) as unknown[];
+    const objects = JSON.parse(raw, jsonReviver) as unknown[];
     const memento = new Memento(objects);
     const searcher = createSearcher();
     searcher.load(memento);
+
+    // Validate: a known term must return results, otherwise the index is stale
+    const check = searcher.getMatches(new Query("bismillah", 1));
+    if (check.matches.length === 0) return null;
+
     return searcher;
   } catch {
     return null;

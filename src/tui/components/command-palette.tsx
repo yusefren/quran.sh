@@ -1,3 +1,4 @@
+import { TextAttributes } from "@opentui/core";
 import { useTheme } from "../theme";
 
 export interface CommandItem {
@@ -35,31 +36,32 @@ export function CommandPalette(props: CommandPaletteProps) {
       titleAlignment="center"
     >
       <box justifyContent="center" marginBottom={1}>
-        <text color={theme.colors.highlight} bold>
+        <text fg={theme.colors.highlight} attributes={TextAttributes.BOLD}>
           {`${theme.ornaments.headerLeft} Commands ${theme.ornaments.headerRight}`}
         </text>
       </box>
 
-      <box flexDirection="column" flexGrow={1}>
+      <box flexDirection="column" flexGrow={1} overflow="hidden">
         {props.commands.map((cmd, i) => {
           const isSelected = i === props.selectedIndex;
           return (
-            <box key={cmd.key} marginBottom={0}>
+            <box key={cmd.key} flexDirection="row" marginBottom={0}>
               <text
-                color={isSelected ? theme.colors.highlight : theme.colors.secondary}
-                bold
+                fg={isSelected ? theme.colors.highlight : theme.colors.secondary}
+                attributes={TextAttributes.BOLD}
                 width={10}
               >
                 {isSelected ? `${theme.ornaments.verseMarker} ` : "  "}{cmd.key}
               </text>
               <text
-                color={isSelected ? theme.colors.highlight : theme.colors.text}
-                bold={isSelected}
+                fg={isSelected ? theme.colors.highlight : theme.colors.text}
+                attributes={isSelected ? TextAttributes.BOLD : 0}
+                width={22}
               >
                 {cmd.label}
               </text>
-              <text color={theme.colors.muted}>
-                {`  ${cmd.description}`}
+              <text fg={theme.colors.muted} flexGrow={1}>
+                {cmd.description}
               </text>
             </box>
           );
@@ -67,7 +69,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       </box>
 
       <box justifyContent="center" marginTop={1}>
-        <text color={theme.colors.muted}>
+        <text fg={theme.colors.muted}>
           {`j/k Navigate  Enter Select  Esc Close`}
         </text>
       </box>
