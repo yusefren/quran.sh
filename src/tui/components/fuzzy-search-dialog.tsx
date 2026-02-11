@@ -1,8 +1,8 @@
 import { TextAttributes } from "@opentui/core";
 import { useKeyboard } from "@opentui/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTheme } from "../theme";
-import { fuzzySearch } from "../../data/fuzzy-search";
+import { fuzzySearch, isIndexReady, ensureSearcherAsync } from "../../data/fuzzy-search";
 import type { FuzzySearchResult } from "../../data/fuzzy-search";
 
 interface FuzzySearchDialogProps {
@@ -18,6 +18,14 @@ export function FuzzySearchDialog(props: FuzzySearchDialogProps) {
   const [input, setInput] = useState("");
   const [results, setResults] = useState<FuzzySearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [indexReady, setIndexReady] = useState(isIndexReady());
+
+  // Trigger async index build when dialog opens
+  useEffect(() => {
+    if (props.visible && !indexReady) {
+      ensureSearcherAsync().then(() => setIndexReady(true));
+    }
+  }, [props.visible, indexReady]);
 
   const runSearch = useCallback((query: string) => {
     if (query.trim().length === 0) {
@@ -31,7 +39,7 @@ export function FuzzySearchDialog(props: FuzzySearchDialogProps) {
   }, []);
 
   useKeyboard((key) => {
-    if (!props.visible) return;
+    if (!props.visible || !indexReady) return;
     const str = key.sequence || key.name;
 
     if (key.name === "escape") {
@@ -117,10 +125,10 @@ export function FuzzySearchDialog(props: FuzzySearchDialogProps) {
         <text fg={theme.colors.text}>
           {input.length > 0 ? input : ""}
         </text>
-        <text fg={theme.colors.muted}>
-          {input.length === 0 ? "Type to search..." : ""}
+        <text fg={!indexReady ? theme.colors.highlight : theme.colors.muted}>
+          {!indexReady ? "Indexing verses..." : input.length === 0 ? "Type to search..." : ""}
         </text>
-        <text fg={theme.colors.highlight}>{"▎"}</text>
+        {indexReady && <text fg={theme.colors.highlight}>{"▎"}</text>}
       </box>
 
       {/* Result count */}

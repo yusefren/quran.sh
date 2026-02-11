@@ -38,6 +38,27 @@ const _require = createRequire(import.meta.url);
 
 let _searcher: DynamicSearcher<VerseRef, string> | null = null;
 
+/**
+ * Whether the search index has been built and is ready for queries.
+ */
+export function isIndexReady(): boolean {
+  return _searcher !== null;
+}
+
+/**
+ * Trigger index building asynchronously (defers to next tick so the UI
+ * can render an "Indexing…" indicator before the synchronous work blocks).
+ */
+export function ensureSearcherAsync(): Promise<void> {
+  if (_searcher) return Promise.resolve();
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      ensureSearcher();
+      resolve();
+    }, 0);
+  });
+}
+
 function ensureSearcher(): DynamicSearcher<VerseRef, string> {
   if (_searcher) return _searcher;
 
