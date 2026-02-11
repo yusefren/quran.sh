@@ -5,7 +5,7 @@
  * Uses openDatabase() so the production DB path is consistent.
  */
 import { openDatabase } from "./db.ts";
-import { getVerse } from "./quran.ts";
+import { getVerse, getSurah as getSurahMeta } from "./quran.ts";
 import type { Surah } from "./quran.ts";
 
 // ---------------------------------------------------------------------------
@@ -178,4 +178,47 @@ export function logSurah(surah: Surah): LogResult {
     ok: true,
     message: `✓ Logged ${surah.totalVerses} verses from Surah ${surah.id} (${surah.transliteration})`,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Completion queries (issue #4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Get the set of surah IDs that have been fully read (all-time).
+ * A surah is "completed" when COUNT(DISTINCT ayah) >= its total verse count.
+ */
+export function getCompletedSurahIds(): Set<number> {
+  const db = openDatabase();
+  try {
+    const rows = db.query(
+      "SELECT surah, COUNT(DISTINCT ayah) as cnt FROM reading_log GROUP BY surah",
+    ).all() as { surah: number; cnt: number }[];
+
+    const completed = new Set<number>();
+    for (const row of rows) {
+      const surah = getSurahMeta(row.surah);
+      if (surah && row.cnt >= surah.totalVerses) {
+        completed.add(row.surah);
+      }
+    }
+    return completed;
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Get the set of ayah IDs that have been read for a given surah (all-time).
+ */
+export function getReadVerseIds(surahId: number): Set<number> {
+  const db = openDatabase();
+  try {
+    const rows = db.query(
+      "SELECT DISTINCT ayah FROM reading_log WHERE surah = ?",
+    ).all(surahId) as { ayah: number }[];
+    return new Set(rows.map((r) => r.ayah));
+  } finally {
+    db.close();
+  }
 }

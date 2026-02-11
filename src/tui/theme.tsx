@@ -32,6 +32,8 @@ export interface ThemeOrnaments {
   progressFilled: string;
   /** Progress bar empty character */
   progressEmpty: string;
+  /** Check/completion indicator for tracked surahs/verses */
+  completedIcon: string;
 }
 
 export interface ThemeColors {
@@ -43,6 +45,7 @@ export interface ThemeColors {
   borderFocused: string;
   highlight: string;
   muted: string;
+  completed: string;
   arabic: string;
   translation: string;
   transliteration: string;
@@ -132,6 +135,7 @@ function deriveLightPalette(dark: ThemeColors, id: string): ThemeColors {
     borderFocused: adjustBrightness(dark.secondary, -30),
     highlight: adjustBrightness(dark.highlight, -50),
     muted: "#9CA3AF",
+    completed: adjustBrightness(dark.completed, -40),
     statusBar: mixWith(dark.statusBar, "#FFFFFF", 0.6),
     // For text-like accents, darken for contrast against light bg
     arabic: adjustBrightness(dark.arabic, -60),
@@ -179,6 +183,7 @@ export const mamlukTheme: Theme = {
     scrollbarThumb: "\u25A0",
     progressFilled: "\u2593",
     progressEmpty: "\u2591",
+    completedIcon: "\u2726",
   },
   colors: {
     primary: "#1E3A8A",        // Lapis lazuli blue
@@ -189,6 +194,7 @@ export const mamlukTheme: Theme = {
     borderFocused: "#D4AF37",  // Gold when focused
     highlight: "#FFD700",      // Bright gold highlight
     muted: "#4A5568",          // Stone gray
+    completed: "#4CAF50",      // Success green
     arabic: "#D4AF37",         // Gold for Arabic script
     translation: "#E8DFD0",    // Vellum for translation
     transliteration: "#7FB3D3",// Soft azure
@@ -230,6 +236,7 @@ export const ottomanTheme: Theme = {
     scrollbarThumb: "\u25C8",
     progressFilled: "\u25C8",
     progressEmpty: "\u25C7",
+    completedIcon: "\u2714",
   },
   colors: {
     primary: "#0A2342",        // Navy cobalt
@@ -240,6 +247,7 @@ export const ottomanTheme: Theme = {
     borderFocused: "#FFD700",  // Gold when focused
     highlight: "#FFD700",      // Gold highlight
     muted: "#4A6080",          // Muted navy
+    completed: "#43A047",      // Success green
     arabic: "#FFD700",         // Gold Arabic
     translation: "#E0E8F0",    // Cool white
     transliteration: "#40E0D0",// Turquoise (Iznik)
@@ -281,6 +289,7 @@ export const safavidTheme: Theme = {
     scrollbarThumb: "\u2727",
     progressFilled: "\u2726",
     progressEmpty: "\u2727",
+    completedIcon: "\u273F",
   },
   colors: {
     primary: "#4169E1",        // Cloud-band royal blue
@@ -291,6 +300,7 @@ export const safavidTheme: Theme = {
     borderFocused: "#C5A059",  // Antique gold focused
     highlight: "#E8C87A",      // Warm gold
     muted: "#506080",          // Soft gray-blue
+    completed: "#66BB6A",      // Success green
     arabic: "#C5A059",         // Antique gold Arabic
     translation: "#E2D8C8",    // Parchment
     transliteration: "#7ECFC0",// Soft teal
@@ -332,6 +342,7 @@ export const andalusianTheme: Theme = {
     scrollbarThumb: "\u2736",
     progressFilled: "\u2736",
     progressEmpty: "\u2737",
+    completedIcon: "\u2727",
   },
   colors: {
     primary: "#1C39BB",        // Alhambra azurite blue
@@ -342,6 +353,7 @@ export const andalusianTheme: Theme = {
     borderFocused: "#DAA520",  // Goldenrod focused
     highlight: "#F0C040",      // Bright gold
     muted: "#5A6A7A",          // Slate
+    completed: "#4CAF50",      // Success green
     arabic: "#DAA520",         // Goldenrod Arabic
     translation: "#F0E6D3",    // Sandstone
     transliteration: "#C75B39",// Terracotta transliteration
@@ -383,6 +395,7 @@ export const maghribiTheme: Theme = {
     scrollbarThumb: "\u2734",
     progressFilled: "\u2734",
     progressEmpty: "\u2735",
+    completedIcon: "\u2726",
   },
   colors: {
     primary: "#003366",        // Moroccan indigo blue
@@ -393,6 +406,7 @@ export const maghribiTheme: Theme = {
     borderFocused: "#B8860B",  // Goldenrod focused
     highlight: "#CC7722",      // Ochre highlight
     muted: "#4A5A6A",          // Slate gray
+    completed: "#43A047",      // Success green
     arabic: "#B8860B",         // Goldenrod Arabic
     translation: "#E8DCC8",    // Warm sand
     transliteration: "#8AB4C0",// Soft teal
@@ -432,6 +446,7 @@ export const madinahTheme: Theme = {
     scrollbarThumb: "\u06DE",
     progressFilled: "\u25CF",
     progressEmpty: "\u25CB",
+    completedIcon: "\u2713",
   },
   colors: {
     primary: "#2E7D32",
@@ -442,6 +457,7 @@ export const madinahTheme: Theme = {
     borderFocused: "#00E676",
     highlight: "#FFD54F",
     muted: "#757575",
+    completed: "#00E676",
     arabic: "#D4A574",
     translation: "#E0E0E0",
     transliteration: "#4DD0E1",
@@ -483,6 +499,7 @@ export const umayyadTheme: Theme = {
     scrollbarThumb: "\u06DE",
     progressFilled: "\u25CF",
     progressEmpty: "\u25CB",
+    completedIcon: "\u25CF",
   },
   colors: {
     primary: "#B8860B",        // Dark goldenrod — desert gold
@@ -493,6 +510,7 @@ export const umayyadTheme: Theme = {
     borderFocused: "#CD3700",  // Vermilion when focused
     highlight: "#FFD700",      // Bright gold highlight
     muted: "#7A6A50",          // Sandy mute
+    completed: "#8BC34A",      // Success green
     arabic: "#DAA520",         // Goldenrod Arabic
     translation: "#E8DCC0",    // Warm vellum
     transliteration: "#C19A6B",// Fawn / desert sand
@@ -534,6 +552,7 @@ export const abbasidTheme: Theme = {
     scrollbarThumb: "\u2593",
     progressFilled: "\u2588",
     progressEmpty: "\u2591",
+    completedIcon: "\u25A0",
   },
   colors: {
     primary: "#1A237E",        // Deep lapis lazuli
@@ -544,6 +563,7 @@ export const abbasidTheme: Theme = {
     borderFocused: "#FFD700",  // Gold when focused
     highlight: "#FFD700",      // Bright gold
     muted: "#4A5570",          // Blue-gray mute
+    completed: "#50C878",      // Success green (emerald)
     arabic: "#FFD700",         // Gold Arabic
     translation: "#E8E0D0",    // Warm ivory
     transliteration: "#50C878",// Emerald green
@@ -585,6 +605,7 @@ export const fatimidTheme: Theme = {
     scrollbarThumb: "\u06DE",
     progressFilled: "\u25C6",
     progressEmpty: "\u25C7",
+    completedIcon: "\u25C9",
   },
   colors: {
     primary: "#191970",        // Midnight blue / deep indigo
@@ -595,6 +616,7 @@ export const fatimidTheme: Theme = {
     borderFocused: "#FFD700",  // Gold when focused
     highlight: "#FFD700",      // Gold highlight
     muted: "#506080",          // Slate blue mute
+    completed: "#4CAF50",      // Success green
     arabic: "#FFD700",         // Gold Arabic
     translation: "#F0E8D8",    // Light parchment
     transliteration: "#40E0D0",// Turquoise
@@ -636,6 +658,7 @@ export const seljukTheme: Theme = {
     scrollbarThumb: "\u25AA",
     progressFilled: "\u25AA",
     progressEmpty: "\u25AB",
+    completedIcon: "\u25AA",
   },
   colors: {
     primary: "#00838F",        // Deep turquoise
@@ -646,6 +669,7 @@ export const seljukTheme: Theme = {
     borderFocused: "#00BCD4",  // Bright turquoise focused
     highlight: "#00BCD4",      // Turquoise highlight
     muted: "#546E7A",          // Blue-gray mute
+    completed: "#4DB6AC",      // Success green (soft teal)
     arabic: "#00BCD4",         // Bright turquoise Arabic
     translation: "#E0E8EC",    // Cool white
     transliteration: "#F4511E",// Brick red
@@ -687,6 +711,7 @@ export const mughalTheme: Theme = {
     scrollbarThumb: "\u2727",
     progressFilled: "\u2726",
     progressEmpty: "\u2727",
+    completedIcon: "\u2740",
   },
   colors: {
     primary: "#8B0000",        // Deep Mughal red
@@ -697,6 +722,7 @@ export const mughalTheme: Theme = {
     borderFocused: "#DAA520",  // Gold when focused
     highlight: "#FFD700",      // Bright gold
     muted: "#6A5050",          // Warm muted
+    completed: "#66BB6A",      // Success green
     arabic: "#DAA520",         // Goldenrod Arabic
     translation: "#F0E0D0",    // Warm cream
     transliteration: "#F08080",// Light coral / rose

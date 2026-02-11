@@ -22,7 +22,7 @@ import { getAllReflections, addReflection, getReflection } from "../data/reflect
 import type { Reflection } from "../data/reflections";
 import { getSurah, search, LANGUAGES } from "../data/quran";
 import { logVerse } from "../data/log";
-import { logSurah, deleteReadingLog } from "../data/log";
+import { logSurah, deleteReadingLog, getCompletedSurahIds, getReadVerseIds } from "../data/log";
 import type { ResetPeriod } from "../data/log";
 import { getPreference, setPreference } from "../data/preferences";
 import type { VerseRef } from "../data/quran";
@@ -98,6 +98,8 @@ function AppContent() {
   // Track surahs already marked as read this session to avoid duplicate prompts (issue #5)
   const markedSurahsRef = useRef<Set<number>>(new Set());
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [completedSurahIds, setCompletedSurahIds] = useState<Set<number>>(new Set());
+  const [readVerseIds, setReadVerseIds] = useState<Set<number>>(new Set());
 
   // Persist settings whenever they change
   useEffect(() => {
@@ -160,6 +162,13 @@ function AppContent() {
       setAllReflections(getAllReflections());
     } catch { /* DB */ }
   }, []);
+
+  const refreshCompletionData = useCallback(() => {
+    try {
+      setCompletedSurahIds(getCompletedSurahIds());
+      setReadVerseIds(getReadVerseIds(selectedSurahId));
+    } catch { /* DB */ }
+  }, [selectedSurahId]);
 
   const isReaderPane = (p: FocusablePane) => p === "arabic" || p === "translation" || p === "transliteration";
 
@@ -674,7 +683,13 @@ function AppContent() {
   useEffect(() => {
     refreshBookmarks();
     refreshPanelData();
+    refreshCompletionData();
   }, []);
+
+  // Refresh read-verse data when surah changes
+  useEffect(() => {
+    refreshCompletionData();
+  }, [selectedSurahId]);
 
   const { theme } = useTheme();
   // const { resolvedMode } = useMode();
@@ -724,6 +739,7 @@ function AppContent() {
                 selectedId={selectedSurahId}
                 focused={focusedPanel === "sidebar" && sidebarSubFocus === "surahList"}
                 disabled={anyModalOpen}
+                completedSurahIds={completedSurahIds}
               />
             </box>
           </box>
@@ -744,6 +760,7 @@ function AppContent() {
           focusedPane={focusedPanel}
           currentVerseId={currentVerseId}
           bookmarkedAyahs={bookmarkedAyahs}
+          readVerseIds={readVerseIds}
           searchResults={searchResults}
           searchQuery={searchQuery}
           isSearchMode={isSearchMode}
@@ -806,6 +823,7 @@ function AppContent() {
               setCurrentVerseId(1);
               try { setBookmarkedAyahs(getBookmarkedAyahs(pendingSurahChange.toId)); } catch { /* DB */ }
               if (showPanel) refreshPanelData();
+              refreshCompletionData();
             }
             setShowMarkSurahDialog(false);
             setPendingSurahChange(null);
@@ -830,6 +848,7 @@ function AppContent() {
               if (period === "session" || period === "all") {
                 markedSurahsRef.current.clear();
               }
+              refreshCompletionData();
             } catch { /* DB */ }
             setShowResetDialog(false);
           }}

@@ -11,6 +11,8 @@ export interface ReaderProps {
   focusedPane: FocusablePane;
   currentVerseId?: number;
   bookmarkedAyahs?: Set<number>;
+  /** Set of ayah IDs already read/tracked for the current surah */
+  readVerseIds?: Set<number>;
   searchResults?: VerseRef[];
   searchQuery?: string;
   isSearchMode?: boolean;
@@ -173,11 +175,14 @@ export function Reader(props: ReaderProps) {
 
           const isCurrent = v.id === (props.currentVerseId ?? 1);
           const isBookmarked = props.bookmarkedAyahs?.has(v.id) ?? false;
+          const isRead = props.readVerseIds?.has(v.id) ?? false;
           const marker = isCurrent ? theme.ornaments.verseMarker : " ";
           const bookmark = isBookmarked ? ` ${theme.ornaments.bookmarkIcon}` : "";
+          const readMark = isRead && !isCurrent ? ` ${theme.ornaments.completedIcon}` : "";
 
           const verseNumColor = isCurrent ? theme.colors.highlight : theme.colors.verseNum;
           const bookmarkColor = theme.colors.bookmark;
+          const readColor = theme.colors.completed;
 
           let textContent: string;
           let textColor: string;
@@ -211,7 +216,7 @@ export function Reader(props: ReaderProps) {
               }}
             >
               <text fg={verseNumColor} attributes={TextAttributes.BOLD}>
-                {marker} {v.id}{isBookmarked ? <span fg={bookmarkColor}>{bookmark}</span> : ""}
+                {marker} {v.id}{isBookmarked ? <span fg={bookmarkColor}>{bookmark}</span> : ""}{isRead && !isCurrent ? <span fg={readColor}>{readMark}</span> : ""}
               </text>
               <text fg={textColor} attributes={mode === "arabic" ? TextAttributes.BOLD : TextAttributes.NONE}>
                 {textContent}

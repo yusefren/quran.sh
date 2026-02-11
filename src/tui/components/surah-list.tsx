@@ -8,6 +8,8 @@ export interface SurahListProps {
   selectedId?: number;
   focused?: boolean;
   disabled?: boolean;
+  /** Set of surah IDs that have been fully read (all-time) */
+  completedSurahIds?: Set<number>;
 }
 
 export function SurahList(props: SurahListProps) {
@@ -21,13 +23,16 @@ export function SurahList(props: SurahListProps) {
       const surah = getSurah(id);
       if (!surah) return { name: "Unknown", description: "", value: id };
 
+      const isCompleted = props.completedSurahIds?.has(id) ?? false;
+      const completedMark = isCompleted ? ` ${theme.ornaments.completedIcon}` : "";
+
       return {
-        name: `${id}. ${surah.transliteration}`,
+        name: `${id}. ${surah.transliteration}${completedMark}`,
         description: surah.translation,
         value: id,
       };
     });
-  }, []);
+  }, [props.completedSurahIds, theme.ornaments.completedIcon]);
 
   const filteredOptions = useMemo(() => {
     const query = searchQuery.toLowerCase();
