@@ -717,16 +717,16 @@ function AppContent() {
         panelFocused={focusedPanel === "panel"}
         sidebar={
           <box flexDirection="column" height="100%">
-            <box height="20%">
+            <box height="15%">
               <StreakChart />
             </box>
-            <box height="15%">
+            <box height="17%">
               <ReadingStats
                 sessionStart={sessionStartRef.current}
                 focused={focusedPanel === "sidebar" && sidebarSubFocus === "stats"}
               />
             </box>
-            <box height="65%">
+            <box height="68%">
               <SurahList
                 onSelect={(id) => {
                   const s = stateRef.current;
