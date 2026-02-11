@@ -13,6 +13,7 @@ import { ReflectionDialog } from "./components/reflection-dialog";
 import { MarkSurahDialog } from "./components/mark-surah-dialog";
 import { ResetTrackingDialog } from "./components/reset-tracking-dialog";
 import { FuzzySearchDialog } from "./components/fuzzy-search-dialog";
+import { reindex, isIndexReady, ensureSearcherAsync } from "../data/fuzzy-search";
 import { CommandPalette } from "./components/command-palette";
 import type { CommandItem } from "./components/command-palette";
 import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
@@ -302,6 +303,10 @@ function AppContent() {
     { key: "Ctrl+F", label: "Fuzzy Search", description: "Fuzzy search across Arabic, translation & transliteration", action: () => setShowFuzzySearch(true) },
     { key: "?", label: "Help", description: "Show keyboard shortcuts", action: () => setShowHelp(true) },
     { key: "X", label: "Reset Tracking", description: "Delete reading data by period", action: () => setShowResetDialog(true) },
+    { key: "I", label: "Re-index Search", description: "Rebuild fuzzy search index", action: () => {
+      showFlash("Re-indexing…");
+      reindex().then(() => showFlash("Search index rebuilt ✓"));
+    } },
     { key: "q", label: "Quit", description: "Exit application", action: () => process.exit(0) },
   ];
 
@@ -698,6 +703,12 @@ function AppContent() {
     refreshBookmarks();
     refreshPanelData();
     refreshCompletionData();
+
+    // Pre-build fuzzy search index on startup (shows toast on first load only)
+    if (!isIndexReady()) {
+      showFlash("Indexing verses…");
+      ensureSearcherAsync().then(() => showFlash("Search index ready ✓"));
+    }
   }, []);
 
   // Refresh read-verse data when surah changes

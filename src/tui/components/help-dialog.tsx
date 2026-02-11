@@ -33,6 +33,9 @@ export function HelpDialog(props: HelpDialogProps) {
     { key: "?", desc: "Show/hide this help dialog" },
     { key: "ESC", desc: "Dismiss dialog / Clear search" },
     { key: "m", desc: "Toggle Reading/Browsing mode" },
+    { key: "Ctrl+F", desc: "Fuzzy search (Arabic, translation & transliteration)" },
+    { key: "Ctrl+P", desc: "Command Palette" },
+    { key: "I", desc: "Re-index search (via Command Palette)" },
     { key: "q", desc: "Quit application" },
   ];
 

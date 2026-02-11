@@ -3,11 +3,15 @@
  *
  * Indexes all 6,236 verses across translation, transliteration, and Arabic text
  * using @m31coding/fuzzy-search. Lazily initialised on first query.
+ *
+ * The built index is persisted to SQLite via the library's Memento API so
+ * subsequent app launches skip the expensive indexEntities() call.
  */
-import { Config, SearcherFactory, Query } from "@m31coding/fuzzy-search";
+import { Config, SearcherFactory, Query, Memento } from "@m31coding/fuzzy-search";
 import type { DynamicSearcher } from "@m31coding/fuzzy-search";
 import { createRequire } from "node:module";
 import type { VerseRef } from "./quran";
+import { getPreference, setPreference } from "./preferences";
 
 // ---------------------------------------------------------------------------
 // Raw types (same shape as quran-json)
@@ -31,6 +35,12 @@ interface RawChapter {
 }
 
 // ---------------------------------------------------------------------------
+// Persistence key
+// ---------------------------------------------------------------------------
+
+const INDEX_KEY = "fuzzy_search_index";
+
+// ---------------------------------------------------------------------------
 // Searcher singleton
 // ---------------------------------------------------------------------------
 
@@ -44,6 +54,80 @@ let _searcher: DynamicSearcher<VerseRef, string> | null = null;
 export function isIndexReady(): boolean {
   return _searcher !== null;
 }
+
+/**
+ * Create a fresh searcher instance with the standard config.
+ */
+function createSearcher(): DynamicSearcher<VerseRef, string> {
+  const config = Config.createDefaultConfig();
+  config.normalizerConfig.allowCharacter = (_c: string) => true;
+  return SearcherFactory.createSearcher<VerseRef, string>(config);
+}
+
+/**
+ * Load all verse entities from quran-json.
+ */
+function loadEntities(): VerseRef[] {
+  const chapters = _require("quran-json/dist/quran_en.json") as RawChapter[];
+  const entities: VerseRef[] = [];
+
+  for (const ch of chapters) {
+    for (const v of ch.verses) {
+      entities.push({
+        surahId: ch.id,
+        surahName: ch.name,
+        surahTransliteration: ch.transliteration,
+        verseId: v.id,
+        text: v.text,
+        translation: v.translation,
+        transliteration: v.transliteration || undefined,
+        reference: `${ch.id}:${v.id}`,
+      });
+    }
+  }
+  return entities;
+}
+
+/**
+ * The terms extractor used for indexing.
+ */
+function getTerms(e: VerseRef): string[] {
+  const terms: string[] = [e.translation, e.text];
+  if (e.transliteration) terms.push(e.transliteration);
+  return terms;
+}
+
+// ---------------------------------------------------------------------------
+// Save / Load helpers
+// ---------------------------------------------------------------------------
+
+function saveIndexToDb(searcher: DynamicSearcher<VerseRef, string>): void {
+  try {
+    const memento = new Memento();
+    searcher.save(memento);
+    setPreference(INDEX_KEY, JSON.stringify(memento.objects));
+  } catch {
+    // Non-fatal — we can always rebuild from scratch
+  }
+}
+
+function tryLoadFromDb(): DynamicSearcher<VerseRef, string> | null {
+  try {
+    const raw = getPreference(INDEX_KEY);
+    if (!raw) return null;
+    const objects = JSON.parse(raw) as unknown[];
+    const memento = new Memento(objects);
+    const searcher = createSearcher();
+    searcher.load(memento);
+    return searcher;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Core init
+// ---------------------------------------------------------------------------
 
 /**
  * Trigger index building asynchronously (defers to next tick so the UI
@@ -62,44 +146,48 @@ export function ensureSearcherAsync(): Promise<void> {
 function ensureSearcher(): DynamicSearcher<VerseRef, string> {
   if (_searcher) return _searcher;
 
-  // Allow all characters (Arabic, diacritics, etc.)
-  const config = Config.createDefaultConfig();
-  config.normalizerConfig.allowCharacter = (_c: string) => true;
-
-  const searcher = SearcherFactory.createSearcher<VerseRef, string>(config);
-
-  // Load monolithic English data (contains Arabic text + transliteration too)
-  const chapters = _require("quran-json/dist/quran_en.json") as RawChapter[];
-
-  const entities: VerseRef[] = [];
-
-  for (const ch of chapters) {
-    for (const v of ch.verses) {
-      entities.push({
-        surahId: ch.id,
-        surahName: ch.name,
-        surahTransliteration: ch.transliteration,
-        verseId: v.id,
-        text: v.text,
-        translation: v.translation,
-        transliteration: v.transliteration || undefined,
-        reference: `${ch.id}:${v.id}`,
-      });
-    }
+  // 1. Try loading from DB (fast path)
+  const cached = tryLoadFromDb();
+  if (cached) {
+    _searcher = cached;
+    return cached;
   }
 
-  searcher.indexEntities(
-    entities,
-    (e) => e.reference,
-    (e) => {
-      const terms: string[] = [e.translation, e.text];
-      if (e.transliteration) terms.push(e.transliteration);
-      return terms;
-    },
-  );
+  // 2. Full index build (slow path)
+  const searcher = createSearcher();
+  const entities = loadEntities();
+
+  searcher.indexEntities(entities, (e) => e.reference, getTerms);
+
+  // Persist for next launch
+  saveIndexToDb(searcher);
 
   _searcher = searcher;
   return searcher;
+}
+
+// ---------------------------------------------------------------------------
+// Re-index (force rebuild)
+// ---------------------------------------------------------------------------
+
+/**
+ * Force a full re-index, clearing any cached data.
+ * Returns a promise so the UI can show feedback after completion.
+ */
+export function reindex(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      _searcher = null;
+
+      const searcher = createSearcher();
+      const entities = loadEntities();
+      searcher.indexEntities(entities, (e) => e.reference, getTerms);
+      saveIndexToDb(searcher);
+      _searcher = searcher;
+
+      resolve();
+    }, 0);
+  });
 }
 
 // ---------------------------------------------------------------------------
