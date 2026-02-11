@@ -15,6 +15,8 @@ import { ResetTrackingDialog } from "./components/reset-tracking-dialog";
 import { FuzzySearchDialog } from "./components/fuzzy-search-dialog";
 import { reindex, isIndexReady, ensureSearcherAsync } from "../data/fuzzy-search";
 import { CommandPalette } from "./components/command-palette";
+import { RtlCalibrationDialog } from "./components/rtl-calibration-dialog";
+import { setRtlStrategy, getRtlStrategy, type RtlStrategy } from "./utils/rtl";
 import type { CommandItem } from "./components/command-palette";
 import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
 import type { Bookmark } from "../data/bookmarks";
@@ -62,7 +64,13 @@ const savedPrefs = {
   showSidebar: loadPref("showSidebar", "true") === "true",
   showPanel: loadPref("showPanel", "false") === "true",
   readingMode: loadPref("readingMode", "false") === "true",
+  rtlStrategy: loadPref("rtlStrategy", "") as RtlStrategy | "",
 };
+
+// Apply saved RTL strategy immediately (before any render)
+if (savedPrefs.rtlStrategy) {
+  setRtlStrategy(savedPrefs.rtlStrategy as RtlStrategy);
+}
 
 function AppContent() {
   const { cycleTheme } = useTheme();
@@ -101,6 +109,7 @@ function AppContent() {
   const markedSurahsRef = useRef<Set<number>>(new Set());
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showFuzzySearch, setShowFuzzySearch] = useState(false);
+  const [showCalibration, setShowCalibration] = useState(!savedPrefs.rtlStrategy);
   const [completedSurahIds, setCompletedSurahIds] = useState<Set<number>>(new Set());
   const [readVerseIds, setReadVerseIds] = useState<Set<number>>(new Set());
 
@@ -189,7 +198,7 @@ function AppContent() {
   }, [showSidebar, showTranslation, showTransliteration, showPanel, focusedPanel]);
 
   // True when any modal/overlay is open — used to disable focus on child components
-  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog || showResetDialog || showFuzzySearch;
+  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog || showResetDialog || showFuzzySearch || showCalibration;
 
   // We use refs to access latest state inside the keyboard handler
   // (avoids stale closures without needing to list every state var as dep)
@@ -307,6 +316,7 @@ function AppContent() {
       showFlash("Re-indexing…");
       reindex().then(() => showFlash("Search index rebuilt ✓"));
     } },
+    { key: "C", label: "Re-calibrate Arabic", description: "Re-run Arabic rendering calibration", action: () => setShowCalibration(true) },
     { key: "q", label: "Quit", description: "Exit application", action: () => process.exit(0) },
   ];
 
@@ -700,6 +710,9 @@ function AppContent() {
   });
 
   useEffect(() => {
+    // Don't run startup work while calibration dialog is active
+    if (showCalibration) return;
+
     refreshBookmarks();
     refreshPanelData();
     refreshCompletionData();
@@ -709,7 +722,7 @@ function AppContent() {
       showFlash("Indexing verses…");
       ensureSearcherAsync().then(() => showFlash("Search index ready ✓"));
     }
-  }, []);
+  }, [showCalibration]);
 
   // Refresh read-verse data when surah changes
   useEffect(() => {
@@ -718,6 +731,20 @@ function AppContent() {
 
   const { theme } = useTheme();
   // const { resolvedMode } = useMode();
+
+  if (showCalibration) {
+    return (
+      <RouteProvider key={theme.id}>
+        <RtlCalibrationDialog
+          onDone={(strategy) => {
+            setRtlStrategy(strategy);
+            try { setPreference("rtlStrategy", strategy); } catch { /* DB */ }
+            setShowCalibration(false);
+          }}
+        />
+      </RouteProvider>
+    );
+  }
 
   return (
     <RouteProvider key={theme.id}>

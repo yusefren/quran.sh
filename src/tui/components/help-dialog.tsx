@@ -36,6 +36,7 @@ export function HelpDialog(props: HelpDialogProps) {
     { key: "Ctrl+F", desc: "Fuzzy search (Arabic, translation & transliteration)" },
     { key: "Ctrl+P", desc: "Command Palette" },
     { key: "I", desc: "Re-index search (via Command Palette)" },
+    { key: "C", desc: "Re-calibrate Arabic (via Command Palette)" },
     { key: "q", desc: "Quit application" },
   ];
 
