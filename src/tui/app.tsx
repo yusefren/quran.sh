@@ -93,6 +93,8 @@ function AppContent() {
   const [readingMode, setReadingMode] = useState(savedPrefs.readingMode);
   const [showMarkSurahDialog, setShowMarkSurahDialog] = useState(false);
   const [pendingSurahChange, setPendingSurahChange] = useState<{ fromId: number; toId: number } | null>(null);
+  // Track surahs already marked as read this session to avoid duplicate prompts (issue #5)
+  const markedSurahsRef = useRef<Set<number>>(new Set());
 
   // Persist settings whenever they change
   useEffect(() => {
@@ -686,6 +688,13 @@ function AppContent() {
                 onSelect={(id) => {
                   const s = stateRef.current;
                   if (s.readingMode && s.selectedSurahId !== id) {
+                    // Skip the dialog if this surah was already marked as read this session
+                    if (markedSurahsRef.current.has(s.selectedSurahId)) {
+                      setSelectedSurahId(id);
+                      setCurrentVerseId(1);
+                      try { setBookmarkedAyahs(getBookmarkedAyahs(id)); } catch { /* DB */ }
+                      return;
+                    }
                     setPendingSurahChange({ fromId: s.selectedSurahId, toId: id });
                     setShowMarkSurahDialog(true);
                     return;
@@ -777,6 +786,8 @@ function AppContent() {
               if (surah) {
                 try { logSurah(surah); } catch { /* DB */ }
               }
+              // Remember this surah was marked so we don't ask again (issue #5)
+              markedSurahsRef.current.add(pendingSurahChange.fromId);
               setSelectedSurahId(pendingSurahChange.toId);
               setCurrentVerseId(1);
               try { setBookmarkedAyahs(getBookmarkedAyahs(pendingSurahChange.toId)); } catch { /* DB */ }
