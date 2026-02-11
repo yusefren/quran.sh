@@ -193,6 +193,21 @@ export function processArabicText(text: string): string {
   return applyStrategy(text, activeStrategy ?? "reshaped_reversed");
 }
 
+// ---------------------------------------------------------------------------
+// RTL language detection
+// ---------------------------------------------------------------------------
+
+/** ISO 639-1 codes for RTL translation languages supported by quran-json */
+const RTL_LANGUAGES = new Set(["ur", "fa", "ar", "he", "ps", "sd", "yi", "ku"]);
+
+/**
+ * Whether a given language code is RTL.
+ * Used by reader.tsx to decide whether translation text needs shaping.
+ */
+export function isRtlLanguage(lang: string): boolean {
+  return RTL_LANGUAGES.has(lang.toLowerCase());
+}
+
 /**
  * Right-align text by padding with spaces on the left.
  */

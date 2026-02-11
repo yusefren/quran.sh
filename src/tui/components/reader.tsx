@@ -4,7 +4,7 @@ import { getSurah } from "../../data/quran";
 import type { VerseRef } from "../../data/quran";
 import { useTheme } from "../theme";
 import type { FocusablePane, ArabicAlign, ArabicWidth, ArabicFlow } from "../app";
-import { renderArabicVerse } from "../utils/rtl";
+import { renderArabicVerse, processArabicText, isRtlLanguage } from "../utils/rtl";
 
 export interface ReaderProps {
   surahId: number;
@@ -107,12 +107,14 @@ export function Reader(props: ReaderProps) {
     const arabicWidth = props.arabicWidth ?? "100%";
     const arabicFlow = props.arabicFlow ?? "verse";
     const isArabic = mode === "arabic";
+    const isRtlTranslation = mode === "translation" && isRtlLanguage(props.language ?? "en");
+    const isRtlPane = isArabic || isRtlTranslation;
 
     // Map alignment names to flexbox values (for text within verse boxes)
     const alignMap = { right: "flex-end", center: "center", left: "flex-start" } as const;
-    const textAlign = isArabic ? alignMap[arabicAlign] : "flex-start";
+    const textAlign = isRtlPane ? alignMap[arabicAlign] : "flex-start";
     // Center the verse boxes in the scrollbox when width is constrained
-    const containerAlign = isArabic && arabicWidth !== "100%" ? "center" : textAlign;
+    const containerAlign = isRtlPane && arabicWidth !== "100%" ? "center" : textAlign;
 
     // Continuous flow mode for Arabic: join all verses into one text block
     if (isArabic && arabicFlow === "continuous") {
@@ -191,7 +193,7 @@ export function Reader(props: ReaderProps) {
             textContent = renderArabicVerse(v.text, arabicZoom);
             textColor = isCurrent ? theme.colors.highlight : theme.colors.arabic;
           } else if (mode === "translation") {
-            textContent = v.translation;
+            textContent = isRtlTranslation ? processArabicText(v.translation) : v.translation;
             textColor = isCurrent ? theme.colors.highlight : theme.colors.translation;
           } else {
             textContent = v.transliteration || "";
@@ -204,13 +206,13 @@ export function Reader(props: ReaderProps) {
               key={`${mode}-${v.id}`}
               flexDirection="column"
               paddingBottom={1}
-              paddingLeft={isArabic ? 2 : 0}
-              marginLeft={isArabic && (textAlign === "center" || textAlign === "flex-end" )  ? "auto" : "0%"}
-              marginRight={isArabic && (textAlign === "center" || textAlign === "flex-start" ) ? "auto" : "0%"}
-              paddingRight={isArabic ? 2 : 0}
-              maxWidth={isArabic ? arabicWidth : "100%"}
-              alignItems={isArabic ? textAlign : "flex-start"}
-              justifyContent={isArabic ? textAlign : "flex-start"}
+              paddingLeft={isRtlPane ? 2 : 0}
+              marginLeft={isRtlPane && (textAlign === "center" || textAlign === "flex-end" )  ? "auto" : "0%"}
+              marginRight={isRtlPane && (textAlign === "center" || textAlign === "flex-start" ) ? "auto" : "0%"}
+              paddingRight={isRtlPane ? 2 : 0}
+              maxWidth={isRtlPane ? arabicWidth : "100%"}
+              alignItems={isRtlPane ? textAlign : "flex-start"}
+              justifyContent={isRtlPane ? textAlign : "flex-start"}
               onMouseDown={() => {
                 if (props.onVerseSelect) props.onVerseSelect(v.id);
               }}
@@ -218,7 +220,7 @@ export function Reader(props: ReaderProps) {
               <text fg={verseNumColor} attributes={TextAttributes.BOLD}>
                 {marker} {v.id}{isBookmarked ? <span fg={bookmarkColor}>{bookmark}</span> : ""}{isRead && !isCurrent ? <span fg={readColor}>{readMark}</span> : ""}
               </text>
-              <text fg={textColor} attributes={mode === "arabic" ? TextAttributes.BOLD : TextAttributes.NONE}>
+              <text fg={textColor} attributes={(isArabic || isRtlTranslation) ? TextAttributes.BOLD : TextAttributes.NONE}>
                 {textContent}
               </text>
             </box>
