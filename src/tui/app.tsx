@@ -11,6 +11,7 @@ import { Panel } from "./components/panel";
 import type { PanelTab } from "./components/panel";
 import { ReflectionDialog } from "./components/reflection-dialog";
 import { MarkSurahDialog } from "./components/mark-surah-dialog";
+import { ResetTrackingDialog } from "./components/reset-tracking-dialog";
 import { CommandPalette } from "./components/command-palette";
 import type { CommandItem } from "./components/command-palette";
 import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
@@ -21,7 +22,8 @@ import { getAllReflections, addReflection, getReflection } from "../data/reflect
 import type { Reflection } from "../data/reflections";
 import { getSurah, search, LANGUAGES } from "../data/quran";
 import { logVerse } from "../data/log";
-import { logSurah } from "../data/log";
+import { logSurah, deleteReadingLog } from "../data/log";
+import type { ResetPeriod } from "../data/log";
 import { getPreference, setPreference } from "../data/preferences";
 import type { VerseRef } from "../data/quran";
 import { ThemeProvider, useTheme } from "./theme";
@@ -95,6 +97,7 @@ function AppContent() {
   const [pendingSurahChange, setPendingSurahChange] = useState<{ fromId: number; toId: number } | null>(null);
   // Track surahs already marked as read this session to avoid duplicate prompts (issue #5)
   const markedSurahsRef = useRef<Set<number>>(new Set());
+  const [showResetDialog, setShowResetDialog] = useState(false);
 
   // Persist settings whenever they change
   useEffect(() => {
@@ -174,7 +177,7 @@ function AppContent() {
   }, [showSidebar, showTranslation, showTransliteration, showPanel, focusedPanel]);
 
   // True when any modal/overlay is open — used to disable focus on child components
-  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog;
+  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog || showResetDialog;
 
   // We use refs to access latest state inside the keyboard handler
   // (avoids stale closures without needing to list every state var as dep)
@@ -286,6 +289,7 @@ function AppContent() {
       },
     },
     { key: "?", label: "Help", description: "Show keyboard shortcuts", action: () => setShowHelp(true) },
+    { key: "X", label: "Reset Tracking", description: "Delete reading data by period", action: () => setShowResetDialog(true) },
     { key: "q", label: "Quit", description: "Exit application", action: () => process.exit(0) },
   ];
 
@@ -362,6 +366,11 @@ function AppContent() {
     // MarkSurahDialog has its own useKeyboard for y/n/escape;
     // we just need the main handler to stop processing further.
     if (showMarkSurahDialog) {
+      return;
+    }
+
+    // ResetTrackingDialog has its own useKeyboard handler.
+    if (showResetDialog) {
       return;
     }
 
@@ -552,6 +561,11 @@ function AppContent() {
       } catch {
         /* DB */
       }
+      return;
+    }
+
+    if (str === "X") {
+      setShowResetDialog(true);
       return;
     }
 
@@ -805,6 +819,21 @@ function AppContent() {
             setShowMarkSurahDialog(false);
             setPendingSurahChange(null);
           }}
+        />
+        <ResetTrackingDialog
+          visible={showResetDialog}
+          onConfirm={(period: ResetPeriod) => {
+            try {
+              const result = deleteReadingLog(period, sessionStartRef.current);
+              showFlash(result.message);
+              // Clear session-local marked surahs when resetting session or all
+              if (period === "session" || period === "all") {
+                markedSurahsRef.current.clear();
+              }
+            } catch { /* DB */ }
+            setShowResetDialog(false);
+          }}
+          onDismiss={() => setShowResetDialog(false)}
         />
       </Layout>
     </RouteProvider>

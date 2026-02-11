@@ -41,8 +41,72 @@ function insertLogEntry(
 }
 
 // ---------------------------------------------------------------------------
+// Reset periods (mirrors StatsPeriod for delete operations)
+// ---------------------------------------------------------------------------
+
+export type ResetPeriod = "session" | "today" | "month" | "year" | "all";
+
+export const RESET_PERIODS: ResetPeriod[] = ["session", "today", "month", "year", "all"];
+
+export const RESET_LABELS: Record<ResetPeriod, string> = {
+  session: "This Session",
+  today: "Today",
+  month: "This Month",
+  year: "This Year",
+  all: "All Time",
+};
+
+function buildDeleteClause(period: ResetPeriod, sessionStart?: string): { clause: string; params: any[] } {
+  switch (period) {
+    case "session":
+      return { clause: "WHERE read_at >= ?", params: [sessionStart ?? new Date().toISOString()] };
+    case "today":
+      return { clause: "WHERE date(read_at) = date('now')", params: [] };
+    case "month":
+      return { clause: "WHERE strftime('%Y-%m', read_at) = strftime('%Y-%m', 'now')", params: [] };
+    case "year":
+      return { clause: "WHERE strftime('%Y', read_at) = strftime('%Y', 'now')", params: [] };
+    case "all":
+      return { clause: "", params: [] };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
+/**
+ * Delete reading log entries for a given time period.
+ * Returns the number of rows deleted.
+ */
+export function deleteReadingLog(period: ResetPeriod, sessionStart?: string): LogResult {
+  const db = openDatabase();
+  try {
+    const { clause, params } = buildDeleteClause(period, sessionStart);
+
+    // Count rows to be deleted first
+    const countRow = db.query(
+      `SELECT COUNT(*) as cnt FROM reading_log ${clause}`,
+    ).get(...params) as { cnt: number } | null;
+    const count = countRow?.cnt ?? 0;
+
+    if (count === 0) {
+      return {
+        ok: true,
+        message: `No reading data to reset for "${RESET_LABELS[period]}".`,
+      };
+    }
+
+    db.query(`DELETE FROM reading_log ${clause}`).run(...params);
+
+    return {
+      ok: true,
+      message: `✓ Reset ${count} reading log entries for "${RESET_LABELS[period]}".`,
+    };
+  } finally {
+    db.close();
+  }
+}
 
 /**
  * Log a single verse by colon-notation reference (e.g. "2:255").
