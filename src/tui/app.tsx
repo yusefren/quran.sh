@@ -12,6 +12,7 @@ import type { PanelTab } from "./components/panel";
 import { ReflectionDialog } from "./components/reflection-dialog";
 import { MarkSurahDialog } from "./components/mark-surah-dialog";
 import { ResetTrackingDialog } from "./components/reset-tracking-dialog";
+import { FuzzySearchDialog } from "./components/fuzzy-search-dialog";
 import { CommandPalette } from "./components/command-palette";
 import type { CommandItem } from "./components/command-palette";
 import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
@@ -98,6 +99,7 @@ function AppContent() {
   // Track surahs already marked as read this session to avoid duplicate prompts (issue #5)
   const markedSurahsRef = useRef<Set<number>>(new Set());
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showFuzzySearch, setShowFuzzySearch] = useState(false);
   const [completedSurahIds, setCompletedSurahIds] = useState<Set<number>>(new Set());
   const [readVerseIds, setReadVerseIds] = useState<Set<number>>(new Set());
 
@@ -186,7 +188,7 @@ function AppContent() {
   }, [showSidebar, showTranslation, showTransliteration, showPanel, focusedPanel]);
 
   // True when any modal/overlay is open — used to disable focus on child components
-  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog || showResetDialog;
+  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog || showResetDialog || showFuzzySearch;
 
   // We use refs to access latest state inside the keyboard handler
   // (avoids stale closures without needing to list every state var as dep)
@@ -297,6 +299,7 @@ function AppContent() {
         setFocusedPanel("arabic");
       },
     },
+    { key: "Ctrl+F", label: "Fuzzy Search", description: "Fuzzy search across Arabic, translation & transliteration", action: () => setShowFuzzySearch(true) },
     { key: "?", label: "Help", description: "Show keyboard shortcuts", action: () => setShowHelp(true) },
     { key: "X", label: "Reset Tracking", description: "Delete reading data by period", action: () => setShowResetDialog(true) },
     { key: "q", label: "Quit", description: "Exit application", action: () => process.exit(0) },
@@ -308,6 +311,12 @@ function AppContent() {
     if (key.ctrl && key.name === "p") {
       setShowPalette((prev) => !prev);
       setPaletteIndex(0);
+      return;
+    }
+
+    // Ctrl+F: toggle fuzzy search dialog
+    if (key.ctrl && key.name === "f") {
+      setShowFuzzySearch((prev) => !prev);
       return;
     }
 
@@ -380,6 +389,11 @@ function AppContent() {
 
     // ResetTrackingDialog has its own useKeyboard handler.
     if (showResetDialog) {
+      return;
+    }
+
+    // FuzzySearchDialog has its own useKeyboard handler.
+    if (showFuzzySearch) {
       return;
     }
 
@@ -853,6 +867,17 @@ function AppContent() {
             setShowResetDialog(false);
           }}
           onDismiss={() => setShowResetDialog(false)}
+        />
+        <FuzzySearchDialog
+          visible={showFuzzySearch}
+          onSelect={(surahId, verseId) => {
+            setSelectedSurahId(surahId);
+            setCurrentVerseId(verseId);
+            setShowFuzzySearch(false);
+            try { setBookmarkedAyahs(getBookmarkedAyahs(surahId)); } catch { /* DB */ }
+            refreshCompletionData();
+          }}
+          onDismiss={() => setShowFuzzySearch(false)}
         />
       </Layout>
     </RouteProvider>

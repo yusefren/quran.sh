@@ -5,20 +5,18 @@
     "": {
       "name": "quran.sh",
       "dependencies": {
+        "@m31coding/fuzzy-search": "^2.0.0",
+      },
+      "devDependencies": {
         "@opentui/core": "^0.1.77",
         "@opentui/react": "^0.1.77",
+        "@types/bun": "latest",
+        "@types/react": "^19.0.0",
         "arabic-reshaper": "^1.1.0",
         "bidi-js": "^1.0.3",
         "quran-json": "^3.1.2",
         "react": "^19.0.0",
         "yoga-layout": "^3.2.1",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-        "@types/react": "^19.0.0",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
       },
     },
   },
@@ -80,6 +78,8 @@
     "@jimp/types": ["@jimp/types@1.6.0", "", { "dependencies": { "zod": "^3.23.8" } }, "sha512-7UfRsiKo5GZTAATxm2qQ7jqmUXP0DxTArztllTcYdyw6Xi5oT4RaoXynVtCD4UyLK5gJgkZJcwonoijrhYFKfg=="],
 
     "@jimp/utils": ["@jimp/utils@1.6.0", "", { "dependencies": { "@jimp/types": "1.6.0", "tinycolor2": "^1.6.0" } }, "sha512-gqFTGEosKbOkYF/WFj26jMHOI5OH2jeP1MmC/zbK6BF6VJBf8rIC5898dPfSzZEbSA0wbbV5slbntWVc5PKLFA=="],
+
+    "@m31coding/fuzzy-search": ["@m31coding/fuzzy-search@2.0.0", "", {}, "sha512-g0ZKZhzBgZtVVKMOuUlQfTJS/LKMCnvKxLenOFOncjoJFkwX2YLMDmXYomBdda8fv0IRfAvOWPikFCBALE8mDg=="],
 
     "@opentui/core": ["@opentui/core@0.1.77", "", { "dependencies": { "bun-ffi-structs": "0.1.2", "diff": "8.0.2", "jimp": "1.6.0", "marked": "17.0.1", "yoga-layout": "3.2.1" }, "optionalDependencies": { "@dimforge/rapier2d-simd-compat": "^0.17.3", "@opentui/core-darwin-arm64": "0.1.77", "@opentui/core-darwin-x64": "0.1.77", "@opentui/core-linux-arm64": "0.1.77", "@opentui/core-linux-x64": "0.1.77", "@opentui/core-win32-arm64": "0.1.77", "@opentui/core-win32-x64": "0.1.77", "bun-webgpu": "0.1.4", "planck": "^1.4.2", "three": "0.177.0" }, "peerDependencies": { "web-tree-sitter": "0.25.10" } }, "sha512-lE3kabm6jdqK3AuBq+O0zZrXdxt6ulmibTc57sf+AsPny6cmwYHnWI4wD6hcreFiYoQVNVvdiJchVgPtowMlEg=="],
 
