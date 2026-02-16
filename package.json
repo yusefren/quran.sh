@@ -1,6 +1,6 @@
 {
   "name": "quran.sh",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A fast, offline-first Quran CLI and TUI reader",
   "module": "src/index.ts",
   "type": "module",
@@ -24,7 +24,7 @@
   "bugs": "https://github.com/smashah/quran.sh/issues",
   "homepage": "https://github.com/smashah/quran.sh",
   "scripts": {
-    "build": "bun build --minify --target bun ./src/index.ts --outdir ./dist",
+    "build": "bun build --minify --target bun --external @opentui/core --external @opentui/react --external yoga-layout --external react ./src/index.ts --outdir ./dist",
     "build:binary": "bun build --compile --minify --sourcemap --format esm ./src/index.ts --outfile ./dist/quran",
     "prepublishOnly": "bun run build",
     "test": "bun test"
