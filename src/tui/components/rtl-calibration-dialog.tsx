@@ -9,10 +9,10 @@ import {
   type RtlStrategy,
 } from "../utils/rtl";
 
-const BASMALA = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ";
+const PREVIEW_TEXT = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلۡحَيُّ ٱلۡقَيُّومُ لَا تَأۡخُذُهُۥ سِنَةٞ وَلَا نَوۡمٞ";
 
-/** Lines consumed per strategy item (label row + preview row + border). */
-const ITEM_HEIGHT = 3;
+/** Lines consumed per strategy item (label row + preview rows + gap). */
+const ITEM_HEIGHT = 5;
 /** Lines reserved for header + instructions + footer + padding. */
 const CHROME_LINES = 12;
 
@@ -22,7 +22,7 @@ interface RtlCalibrationDialogProps {
 
 export function RtlCalibrationDialog(props: RtlCalibrationDialogProps) {
   const { theme } = useTheme();
-  const { height: rows } = useTerminalDimensions();
+  const { height: rows, width: cols } = useTerminalDimensions();
   const [selectedIndex, setSelectedIndex] = useState(5); // default to reshaped_reversed
   const windowStartRef = useRef(0);
 
@@ -76,7 +76,12 @@ export function RtlCalibrationDialog(props: RtlCalibrationDialogProps) {
       </box>
       <box justifyContent="center" marginBottom={1}>
         <text fg={theme.colors.muted}>
-          {"the Basmala below looks correct — connected and right-to-left."}
+          {"the text below looks correct — connected and right-to-left."}
+        </text>
+      </box>
+      <box justifyContent="center" marginBottom={1}>
+        <text fg={theme.colors.muted}>
+          {"Choose the option where BOTH lines display correctly."}
         </text>
       </box>
       <box justifyContent="center" marginBottom={1}>
@@ -100,7 +105,7 @@ export function RtlCalibrationDialog(props: RtlCalibrationDialogProps) {
           const idx = RTL_STRATEGIES.indexOf(strategy);
           const isSelected = idx === selectedIndex;
           const label = RTL_STRATEGY_LABELS[strategy];
-          const preview = applyStrategy(BASMALA, strategy);
+          const preview = applyStrategy(PREVIEW_TEXT, strategy, Math.max(20, cols - 12));
           const marker = isSelected ? theme.ornaments.verseMarker : " ";
           const labelColor = isSelected
             ? theme.colors.highlight
@@ -135,13 +140,16 @@ export function RtlCalibrationDialog(props: RtlCalibrationDialogProps) {
                   {` ${label}`}
                 </text>
               </box>
-              <box paddingLeft={4}>
-                <text
-                  fg={textColor}
-                  attributes={TextAttributes.BOLD}
-                >
-                  {preview}
-                </text>
+              <box paddingLeft={4} flexDirection="column">
+                {preview.split("\n").map((line, li) => (
+                  <text
+                    key={li}
+                    fg={textColor}
+                    attributes={TextAttributes.BOLD}
+                  >
+                    {line}
+                  </text>
+                ))}
               </box>
             </box>
           );

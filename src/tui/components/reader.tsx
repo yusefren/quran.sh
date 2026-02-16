@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useRef } from "react";
 import { TextAttributes } from "@opentui/core";
+import { useTerminalDimensions } from "@opentui/react";
 import { getSurah } from "../../data/quran";
 import type { VerseRef } from "../../data/quran";
 import { useTheme } from "../theme";
@@ -40,6 +41,9 @@ export function Reader(props: ReaderProps) {
   const isTranslationFocused = props.focusedPane === "translation";
   const isTransliterationFocused = props.focusedPane === "transliteration";
   const isAnyReaderFocused = !props.modalOpen && (isArabicFocused || isTranslationFocused || isTransliterationFocused);
+
+  // Terminal width for line-aware Arabic reverse
+  const { width: termCols } = useTerminalDimensions();
 
   // Refs for non-focused pane scroll sync
   const scrollRefs = useRef<Record<string, any>>({});
@@ -116,10 +120,15 @@ export function Reader(props: ReaderProps) {
     // Center the verse boxes in the scrollbox when width is constrained
     const containerAlign = isRtlPane && arabicWidth !== "100%" ? "center" : textAlign;
 
+    // Compute available columns for line-aware reverse.
+    // Account for sidebar (~30 cols), borders (2), padding (4%).
+    const paneWidthFraction = arabicWidth === "60%" ? 0.6 : arabicWidth === "80%" ? 0.8 : 1;
+    const availableCols = Math.max(20, Math.floor(termCols * 0.7 * paneWidthFraction) - 6);
+
     // Continuous flow mode for Arabic: join all verses into one text block
     if (isArabic && arabicFlow === "continuous") {
       const parts = surah.verses.map((v) => {
-        const text = renderArabicVerse(v.text, arabicZoom);
+        const text = renderArabicVerse(v.text, arabicZoom, availableCols);
         const isCurrent = v.id === (props.currentVerseId ?? 1);
         const marker = theme.ornaments.sectionMarker;
         return `${text} ${marker}${v.id}${marker}`;
@@ -144,10 +153,12 @@ export function Reader(props: ReaderProps) {
           backgroundColor={theme.colors.background}
           viewportCulling={true}
         >
-          <box maxWidth={arabicWidth} paddingLeft={2} paddingRight={2}>
-            <text fg={theme.colors.arabic} attributes={TextAttributes.BOLD}>
-              {parts.join("  ")}
-            </text>
+          <box maxWidth={arabicWidth} paddingLeft={2} paddingRight={2} flexDirection="column">
+            {parts.join("  ").split("\n").map((line, li) => (
+              <text key={li} fg={theme.colors.arabic} attributes={TextAttributes.BOLD}>
+                {line}
+              </text>
+            ))}
           </box>
         </scrollbox>
       );
@@ -190,10 +201,10 @@ export function Reader(props: ReaderProps) {
           let textColor: string;
 
           if (mode === "arabic") {
-            textContent = renderArabicVerse(v.text, arabicZoom);
+            textContent = renderArabicVerse(v.text, arabicZoom, availableCols);
             textColor = isCurrent ? theme.colors.highlight : theme.colors.arabic;
           } else if (mode === "translation") {
-            textContent = isRtlTranslation ? processArabicText(v.translation) : v.translation;
+            textContent = isRtlTranslation ? processArabicText(v.translation, availableCols) : v.translation;
             textColor = isCurrent ? theme.colors.highlight : theme.colors.translation;
           } else {
             textContent = v.transliteration || "";
@@ -220,9 +231,11 @@ export function Reader(props: ReaderProps) {
               <text fg={verseNumColor} attributes={TextAttributes.BOLD}>
                 {marker} {v.id}{isBookmarked ? <span fg={bookmarkColor}>{bookmark}</span> : ""}{isRead && !isCurrent ? <span fg={readColor}>{readMark}</span> : ""}
               </text>
-              <text fg={textColor} attributes={(isArabic || isRtlTranslation) ? TextAttributes.BOLD : TextAttributes.NONE}>
-                {textContent}
-              </text>
+              {textContent.split("\n").map((line, li) => (
+                <text key={li} fg={textColor} attributes={(isArabic || isRtlTranslation) ? TextAttributes.BOLD : TextAttributes.NONE}>
+                  {line}
+                </text>
+              ))}
             </box>
           );
         })}
@@ -237,8 +250,6 @@ export function Reader(props: ReaderProps) {
       focusable={true}
       focused={isAnyReaderFocused}
       scrollY={true}
-      flexDirection="column"
-      showScrollbar={false}
       flexDirection="column"
       overflow="hidden"
       borderStyle={theme.borderStyle}

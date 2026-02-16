@@ -770,7 +770,7 @@ function AppContent() {
             <box height="15%">
               <StreakChart />
             </box>
-            <box height="17%">
+            <box height="17%" minHeight={3}>
               <ReadingStats
                 sessionStart={sessionStartRef.current}
                 focused={focusedPanel === "sidebar" && sidebarSubFocus === "stats"}

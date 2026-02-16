@@ -104,6 +104,53 @@ function reverse(text: string): string {
   return [...text].reverse().join("");
 }
 
+/**
+ * Wrap text into lines that fit within `width` columns, then reverse
+ * each line individually.  This preserves correct top-to-bottom line
+ * order while each line reads RTL.
+ *
+ * Returns lines joined by `\n`.  Callers that render into OpenTUI
+ * **must** split on `\n` and render each line as a separate `<text>`
+ * element (OpenTUI cannot handle `\n` inside text content).
+ *
+ * When `width` is 0 or undefined we fall back to a plain full-string
+ * reverse (single-line behaviour, same as before).
+ */
+export function wrapAndReverse(text: string, width?: number): string {
+  if (!width || width <= 0) return reverse(text);
+
+  // 1. Split into visual-width–bounded lines
+  const lines = wrapLines(text, width);
+  // 2. Reverse each line individually
+  return lines.map((l) => reverse(l)).join("\n");
+}
+
+/**
+ * Break `text` into lines of at most `maxWidth` visual columns.
+ * Combining marks (zero-width) are not counted towards the width.
+ */
+function wrapLines(text: string, maxWidth: number): string[] {
+  const chars = [...text];
+  const lines: string[] = [];
+  let line = "";
+  let lineWidth = 0;
+
+  for (const ch of chars) {
+    const code = ch.codePointAt(0)!;
+    const w = isCombiningMark(code) ? 0 : 1;
+
+    if (w > 0 && lineWidth + w > maxWidth && line.length > 0) {
+      lines.push(line);
+      line = "";
+      lineWidth = 0;
+    }
+    line += ch;
+    lineWidth += w;
+  }
+  if (line.length > 0) lines.push(line);
+  return lines;
+}
+
 /** Reverse word order (keeps characters within each word as-is). */
 function reverseWords(text: string): string {
   return text.split(/\s+/).reverse().join(" ");
@@ -133,25 +180,29 @@ function wrapRLM(text: string): string {
  * Apply a specific strategy to Arabic text.  Used both by the reader at
  * runtime and by the calibration dialog to preview each strategy.
  */
-export function applyStrategy(text: string, strategy: RtlStrategy): string {
+export function applyStrategy(
+  text: string,
+  strategy: RtlStrategy,
+  width?: number,
+): string {
   switch (strategy) {
     // --- no reshaping ---
     case "raw":
       return text;
     case "reversed":
-      return reverse(text);
+      return wrapAndReverse(text, width);
     case "stripped":
       return stripDiacritics(text);
     case "stripped_reversed":
-      return reverse(stripDiacritics(text));
+      return wrapAndReverse(stripDiacritics(text), width);
 
     // --- reshaped ---
     case "reshaped":
       return reshape(text);
     case "reshaped_reversed":
-      return reverse(reshape(text));
+      return wrapAndReverse(reshape(text), width);
     case "reshaped_reversed_bidi":
-      return wrapRLM(reverse(reshape(text)));
+      return wrapRLM(wrapAndReverse(reshape(text), width));
     case "reshaped_word_reversed":
       return reverseWords(reshape(text));
 
@@ -159,9 +210,9 @@ export function applyStrategy(text: string, strategy: RtlStrategy): string {
     case "stripped_reshaped":
       return reshape(stripDiacritics(text));
     case "stripped_reshaped_reversed":
-      return reverse(reshape(stripDiacritics(text)));
+      return wrapAndReverse(reshape(stripDiacritics(text)), width);
     case "stripped_reshaped_reversed_bidi":
-      return wrapRLM(reverse(reshape(stripDiacritics(text))));
+      return wrapRLM(wrapAndReverse(reshape(stripDiacritics(text)), width));
 
     // --- RLO (Right-to-Left Override) ---
     case "rlo_raw":
@@ -189,8 +240,8 @@ export function applyStrategy(text: string, strategy: RtlStrategy): string {
  * Process Arabic text for terminal display using the active strategy.
  * Falls back to `reshaped_reversed` if no strategy has been set yet.
  */
-export function processArabicText(text: string): string {
-  return applyStrategy(text, activeStrategy ?? "reshaped_reversed");
+export function processArabicText(text: string, width?: number): string {
+  return applyStrategy(text, activeStrategy ?? "reshaped_reversed", width);
 }
 
 // ---------------------------------------------------------------------------
@@ -225,8 +276,12 @@ export function alignRTL(text: string, width: number): string {
  * @param zoom - Zoom level (0-5). Each level adds one space between base
  *               characters, making the Arabic text wider in the terminal.
  */
-export function renderArabicVerse(text: string, zoom: number = 0): string {
-  const shaped = processArabicText(text);
+export function renderArabicVerse(
+  text: string,
+  zoom: number = 0,
+  width?: number,
+): string {
+  const shaped = processArabicText(text, width);
   if (zoom <= 0) return shaped;
 
   const chars = [...shaped];
