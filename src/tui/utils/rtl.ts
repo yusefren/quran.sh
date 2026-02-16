@@ -126,26 +126,57 @@ export function wrapAndReverse(text: string, width?: number): string {
 }
 
 /**
+ * Measure the visual width of a string.
+ * Combining marks (zero-width) are not counted.
+ */
+function visualWidth(str: string): number {
+  let w = 0;
+  for (const ch of str) {
+    const code = ch.codePointAt(0)!;
+    if (!isCombiningMark(code)) w += 1;
+  }
+  return w;
+}
+
+/**
  * Break `text` into lines of at most `maxWidth` visual columns.
- * Combining marks (zero-width) are not counted towards the width.
+ * Words are NEVER split across lines — this is critical for Quranic text.
+ * If a single word exceeds `maxWidth`, it is placed on its own line.
  */
 function wrapLines(text: string, maxWidth: number): string[] {
-  const chars = [...text];
+  const words = text.split(/(\s+)/); // keep whitespace tokens
   const lines: string[] = [];
   let line = "";
   let lineWidth = 0;
 
-  for (const ch of chars) {
-    const code = ch.codePointAt(0)!;
-    const w = isCombiningMark(code) ? 0 : 1;
+  for (const token of words) {
+    const tw = visualWidth(token);
 
-    if (w > 0 && lineWidth + w > maxWidth && line.length > 0) {
-      lines.push(line);
-      line = "";
-      lineWidth = 0;
+    // Pure whitespace token
+    if (/^\s+$/.test(token)) {
+      // Only add space if line already has content and it fits
+      if (line.length > 0 && lineWidth + tw <= maxWidth) {
+        line += token;
+        lineWidth += tw;
+      }
+      continue;
     }
-    line += ch;
-    lineWidth += w;
+
+    // Word token
+    if (line.length === 0) {
+      // Start of a new line — always accept the word
+      line = token;
+      lineWidth = tw;
+    } else if (lineWidth + 1 + tw <= maxWidth) {
+      // Fits on current line (with a space separator)
+      line += " " + token;
+      lineWidth += 1 + tw;
+    } else {
+      // Doesn't fit — push current line and start new one
+      lines.push(line);
+      line = token;
+      lineWidth = tw;
+    }
   }
   if (line.length > 0) lines.push(line);
   return lines;
