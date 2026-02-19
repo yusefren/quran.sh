@@ -16,6 +16,15 @@ export function ImageReader({ surahId, verseId, focused = false }: ImageReaderPr
   const renderer = useRenderer();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [resizeCount, setResizeCount] = useState<number>(0);
+
+  useEffect(() => {
+    const handleResize = () => setResizeCount((c) => c + 1);
+    renderer.on("resize", handleResize);
+    return () => {
+      renderer.off("resize", handleResize);
+    };
+  }, [renderer]);
 
   useEffect(() => {
     let active = true;
@@ -184,7 +193,7 @@ export function ImageReader({ surahId, verseId, focused = false }: ImageReaderPr
         boxRef.current.remove(canvas.id);
       }
     };
-  }, [surahId, verseId, renderer]);
+  }, [surahId, verseId, renderer, resizeCount]);
 
   return (
     <scrollbox 
