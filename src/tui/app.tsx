@@ -54,6 +54,7 @@ const savedPrefs = {
   selectedSurahId: Number(loadPref("selectedSurahId", "1")),
   currentVerseId: Number(loadPref("currentVerseId", "1")),
   showArabic: loadPref("showArabic", "true") === "true",
+  showArabicImage: loadPref("showArabicImage", "false") === "true",
   showTranslation: loadPref("showTranslation", "true") === "true",
   showTransliteration: loadPref("showTransliteration", "false") === "true",
   language: loadPref("language", "en"),
@@ -99,6 +100,7 @@ function AppContent() {
   const [arabicFlow, setArabicFlow] = useState<ArabicFlow>(savedPrefs.arabicFlow);
 
   const [showArabic, setShowArabic] = useState(savedPrefs.showArabic);
+  const [showArabicImage, setShowArabicImage] = useState(savedPrefs.showArabicImage);
   const [showTranslation, setShowTranslation] = useState(savedPrefs.showTranslation);
   const [showTransliteration, setShowTransliteration] = useState(savedPrefs.showTransliteration);
   const [language, setLanguage] = useState(savedPrefs.language);
@@ -120,6 +122,7 @@ function AppContent() {
       setPreference("selectedSurahId", String(selectedSurahId));
       setPreference("currentVerseId", String(currentVerseId));
       setPreference("showArabic", String(showArabic));
+      setPreference("showArabicImage", String(showArabicImage));
       setPreference("showTranslation", String(showTranslation));
       setPreference("showTransliteration", String(showTransliteration));
       setPreference("language", language);
@@ -207,20 +210,21 @@ function AppContent() {
   const stateRef = useRef({
     selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
-    showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
+    showReflectionDialog, reflectionInput, showArabic, showArabicImage, showTranslation, showTransliteration,
     language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
     arabicAlign, arabicWidth, arabicFlow, readingMode,
   });
   stateRef.current = {
     selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
-    showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
+    showReflectionDialog, reflectionInput, showArabic, showArabicImage, showTranslation, showTransliteration,
     language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
     arabicAlign, arabicWidth, arabicFlow, readingMode,
   };
 
   const paletteCommands: PaletteCommand[] = [
     { key: "a", label: "Toggle Arabic", description: "Show/hide Arabic pane", action: () => setShowArabic((prev) => !prev) },
+    { key: "i", label: "Toggle Arabic Image", description: "Show/hide ayah image render", action: () => setShowArabicImage((prev) => !prev) },
     { key: "t", label: "Toggle Translation", description: "Show/hide Translation pane", action: () => setShowTranslation((prev) => !prev) },
     { key: "r", label: "Toggle Transliteration", description: "Show/hide Transliteration pane", action: () => setShowTransliteration((prev) => !prev) },
     {
@@ -532,6 +536,10 @@ function AppContent() {
       setShowArabic(prev => !prev);
       return;
     }
+    if (str === 'i') {
+      setShowArabicImage(prev => !prev);
+      return;
+    }
     if (str === 't') {
       setShowTranslation(prev => !prev);
       return;
@@ -831,6 +839,7 @@ function AppContent() {
           isSearchMode={isSearchMode}
           searchInput={searchInput}
           showArabic={showArabic}
+          showArabicImage={showArabicImage}
           showTranslation={showTranslation}
           showTransliteration={showTransliteration}
           language={language}

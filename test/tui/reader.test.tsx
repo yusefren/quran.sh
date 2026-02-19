@@ -22,12 +22,12 @@ describe("Reader", () => {
     // Check for Surah title in border
     expect(output).toContain("Al-Fatihah");
 
-    // Check for verse [1:1]
-    expect(output).toContain("[1:1]");
+    // Check for verse 1 (marked active)
+    expect(output).toContain("▹ 1");
     expect(output).toContain("In the name of Allah");
     
-    // Check for verse [1:3] (visible in initial view with Arabic enabled)
-    expect(output).toContain("[1:3]");
+    // Check for verse 2 (visible in initial view with Arabic enabled)
+    expect(output).toContain("  2");
     
     // Scroll down to see verse 7
     for (let i = 0; i < 20; i++) {
@@ -41,8 +41,8 @@ describe("Reader", () => {
       .map((line) => line.spans.map((s) => s.text).join(""))
       .join("\n");
 
-    // Check for verse [1:7]
-    expect(output).toContain("[1:7]");
+    // Check for verse 7
+    expect(output).toContain("  7");
   });
 
   test("handles surah change", async () => {
@@ -61,7 +61,7 @@ describe("Reader", () => {
       .join("\n");
       
     expect(output).toContain("An-Nas");
-    expect(output).toContain("[114:1]");
+    expect(output).toContain("▹ 1");
     // Adjusted expectation to match received output (no comma)
     expect(output).toContain("Say, \"I seek refuge in the Lord of mankind");
   });

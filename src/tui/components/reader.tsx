@@ -6,6 +6,7 @@ import type { VerseRef } from "../../data/quran";
 import { useTheme } from "../theme";
 import type { FocusablePane, ArabicAlign, ArabicWidth, ArabicFlow } from "../app";
 import { renderArabicVerse, processArabicText, isRtlLanguage } from "../utils/rtl";
+import { ImageReader } from "./image-reader";
 
 export interface ReaderProps {
   surahId: number;
@@ -21,6 +22,7 @@ export interface ReaderProps {
   showArabic?: boolean;
   showTranslation?: boolean;
   showTransliteration?: boolean;
+  showArabicImage?: boolean;
   language?: string;
   arabicZoom?: number;
   modalOpen?: boolean;
@@ -98,6 +100,7 @@ export function Reader(props: ReaderProps) {
   const showTranslation = props.showTranslation ?? true;
   const showTransliteration = props.showTransliteration ?? false;
   const showArabic = props.showArabic ?? true;
+  const showArabicImage = props.showArabicImage ?? false;
 
   const bottomPaneCount = (showTranslation ? 1 : 0) + (showTransliteration ? 1 : 0);
 
@@ -315,7 +318,11 @@ export function Reader(props: ReaderProps) {
                   title={paneTitle(surahLabel, isArabicFocused, searchTitle())}
                   titleAlignment="left"
                 >
-                  {renderVerseList("arabic", isArabicFocused)}
+                  {showArabicImage ? (
+                    <ImageReader surahId={surah.id} verseId={props.currentVerseId ?? 1} />
+                  ) : (
+                    renderVerseList("arabic", isArabicFocused)
+                  )}
                 </box>
               )}
 
