@@ -319,7 +319,7 @@ export function Reader(props: ReaderProps) {
                   titleAlignment="left"
                 >
                   {showArabicImage ? (
-                    <ImageReader surahId={surah.id} verseId={props.currentVerseId ?? 1} />
+                    <ImageReader surahId={surah.id} verseId={props.currentVerseId ?? 1} focused={isArabicFocused} />
                   ) : (
                     renderVerseList("arabic", isArabicFocused)
                   )}

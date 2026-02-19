@@ -23,7 +23,7 @@ describe("Reader", () => {
     expect(output).toContain("Al-Fatihah");
 
     // Check for verse 1 (marked active)
-    expect(output).toContain("▹ 1");
+    expect(output).toContain("▸ 1");
     expect(output).toContain("In the name of Allah");
     
     // Check for verse 2 (visible in initial view with Arabic enabled)
@@ -61,7 +61,7 @@ describe("Reader", () => {
       .join("\n");
       
     expect(output).toContain("An-Nas");
-    expect(output).toContain("▹ 1");
+    expect(output).toContain("▸ 1");
     // Adjusted expectation to match received output (no comma)
     expect(output).toContain("Say, \"I seek refuge in the Lord of mankind");
   });

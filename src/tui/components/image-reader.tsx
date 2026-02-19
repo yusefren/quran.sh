@@ -8,10 +8,11 @@ import { getSurah } from "../../data/quran";
 interface ImageReaderProps {
   surahId: number;
   verseId: number;
+  focused?: boolean;
 }
 
-export function ImageReader({ surahId, verseId }: ImageReaderProps) {
-  const boxRef = useRef<BoxRenderable>(null);
+export function ImageReader({ surahId, verseId, focused = false }: ImageReaderProps) {
+  const boxRef = useRef<any>(null);
   const renderer = useRenderer();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -186,13 +187,18 @@ export function ImageReader({ surahId, verseId }: ImageReaderProps) {
   }, [surahId, verseId, renderer]);
 
   return (
-    <box 
+    <scrollbox 
       ref={boxRef} 
       width="100%" 
       height="100%" 
       flexDirection="column" 
       alignItems="center" 
       justifyContent="center"
+      scrollY={true}
+      focusable={true}
+      focused={focused}
+      scrollbarOptions={{ visible: false }}
+      viewportCulling={true}
     >
       {loading && (
         <text fg="#888888">Loading image for {getSurah(surahId)?.transliteration} {surahId}:{verseId}...</text>
@@ -200,6 +206,6 @@ export function ImageReader({ surahId, verseId }: ImageReaderProps) {
       {error && (
         <text fg="#ff5555">{error}</text>
       )}
-    </box>
+    </scrollbox>
   );
 }
