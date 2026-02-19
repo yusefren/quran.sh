@@ -286,7 +286,7 @@ function AppContent() {
       },
     },
     {
-      key: "y",
+      key: "c",
       label: "Copy Ayah Image",
       description: "Copy current verse image to clipboard (surahquran.com)",
       action: () => {
@@ -727,7 +727,7 @@ function AppContent() {
           // DB may not be available
         }
       }
-      if (str === 'y') {
+      if (str === 'c') {
         showFlash("Fetching ayah image…");
         copyAyahImage(s.selectedSurahId, s.currentVerseId)
           .then(() => showFlash(`Copied ${s.selectedSurahId}:${s.currentVerseId} image ✓`))
