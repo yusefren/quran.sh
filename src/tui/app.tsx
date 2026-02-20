@@ -18,6 +18,7 @@ import { CommandPalette } from "./components/command-palette";
 import { RtlCalibrationDialog } from "./components/rtl-calibration-dialog";
 import { setRtlStrategy, getRtlStrategy, type RtlStrategy } from "./utils/rtl";
 import { copyAyahImage } from "./utils/clipboard";
+import { ImageWarningDialog } from "./components/image-warning-dialog";
 import type { CommandItem } from "./components/command-palette";
 import { toggleBookmark, getBookmarkedAyahs, getAllBookmarks } from "../data/bookmarks";
 import type { Bookmark } from "../data/bookmarks";
@@ -55,6 +56,7 @@ const savedPrefs = {
   selectedSurahId: Number(loadPref("selectedSurahId", "1")),
   currentVerseId: Number(loadPref("currentVerseId", "1")),
   showArabic: loadPref("showArabic", "true") === "true",
+  showArabicImage: loadPref("showArabicImage", "false") === "true",
   showTranslation: loadPref("showTranslation", "true") === "true",
   showTransliteration: loadPref("showTransliteration", "false") === "true",
   language: loadPref("language", "en"),
@@ -66,6 +68,7 @@ const savedPrefs = {
   showPanel: loadPref("showPanel", "false") === "true",
   readingMode: loadPref("readingMode", "false") === "true",
   rtlStrategy: loadPref("rtlStrategy", "") as RtlStrategy | "",
+  hasSeenImageWarning: loadPref("hasSeenImageWarning", "false") === "true",
 };
 
 // Apply saved RTL strategy immediately (before any render)
@@ -100,6 +103,7 @@ function AppContent() {
   const [arabicFlow, setArabicFlow] = useState<ArabicFlow>(savedPrefs.arabicFlow);
 
   const [showArabic, setShowArabic] = useState(savedPrefs.showArabic);
+  const [showArabicImage, setShowArabicImage] = useState(savedPrefs.showArabicImage);
   const [showTranslation, setShowTranslation] = useState(savedPrefs.showTranslation);
   const [showTransliteration, setShowTransliteration] = useState(savedPrefs.showTransliteration);
   const [language, setLanguage] = useState(savedPrefs.language);
@@ -114,6 +118,8 @@ function AppContent() {
   const [showCalibration, setShowCalibration] = useState(!savedPrefs.rtlStrategy);
   const [completedSurahIds, setCompletedSurahIds] = useState<Set<number>>(new Set());
   const [readVerseIds, setReadVerseIds] = useState<Set<number>>(new Set());
+  const [hasSeenImageWarning, setHasSeenImageWarning] = useState(savedPrefs.hasSeenImageWarning);
+  const [showImageWarningDialog, setShowImageWarningDialog] = useState(false);
 
   // Persist settings whenever they change
   useEffect(() => {
@@ -121,6 +127,7 @@ function AppContent() {
       setPreference("selectedSurahId", String(selectedSurahId));
       setPreference("currentVerseId", String(currentVerseId));
       setPreference("showArabic", String(showArabic));
+      setPreference("showArabicImage", String(showArabicImage));
       setPreference("showTranslation", String(showTranslation));
       setPreference("showTransliteration", String(showTransliteration));
       setPreference("language", language);
@@ -131,8 +138,9 @@ function AppContent() {
       setPreference("showSidebar", String(showSidebar));
       setPreference("showPanel", String(showPanel));
       setPreference("readingMode", String(readingMode));
+      setPreference("hasSeenImageWarning", String(hasSeenImageWarning));
     } catch { /* DB may not be available in tests */ }
-  }, [selectedSurahId, currentVerseId, showArabic, showTranslation, showTransliteration, language, arabicAlign, arabicWidth, arabicFlow, arabicZoom, showSidebar, showPanel, readingMode]);
+  }, [selectedSurahId, currentVerseId, showArabic, showArabicImage, showTranslation, showTransliteration, language, arabicAlign, arabicWidth, arabicFlow, arabicZoom, showSidebar, showPanel, readingMode, hasSeenImageWarning]);
 
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -200,7 +208,7 @@ function AppContent() {
   }, [showSidebar, showTranslation, showTransliteration, showPanel, focusedPanel]);
 
   // True when any modal/overlay is open — used to disable focus on child components
-  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog || showResetDialog || showFuzzySearch || showCalibration;
+  const anyModalOpen = showPalette || showReflectionDialog || showHelp || isSearchMode || showMarkSurahDialog || showResetDialog || showFuzzySearch || showCalibration || showImageWarningDialog;
 
   // We use refs to access latest state inside the keyboard handler
   // (avoids stale closures without needing to list every state var as dep)
@@ -208,20 +216,27 @@ function AppContent() {
   const stateRef = useRef({
     selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
-    showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
+    showReflectionDialog, reflectionInput, showArabic, showArabicImage, showTranslation, showTransliteration,
     language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
-    arabicAlign, arabicWidth, arabicFlow, readingMode,
+    arabicAlign, arabicWidth, arabicFlow, readingMode, hasSeenImageWarning, showImageWarningDialog,
   });
   stateRef.current = {
     selectedSurahId, currentVerseId, focusedPanel, isSearchMode, searchInput,
     searchResults, showHelp, showSidebar, showPanel, showPalette, paletteIndex,
-    showReflectionDialog, reflectionInput, showArabic, showTranslation, showTransliteration,
+    showReflectionDialog, reflectionInput, showArabic, showArabicImage, showTranslation, showTransliteration,
     language, panelTab, panelIndex, allBookmarks, allCues, allReflections, anyModalOpen,
-    arabicAlign, arabicWidth, arabicFlow, readingMode,
+    arabicAlign, arabicWidth, arabicFlow, readingMode, hasSeenImageWarning, showImageWarningDialog,
   };
 
   const paletteCommands: PaletteCommand[] = [
     { key: "a", label: "Toggle Arabic", description: "Show/hide Arabic pane", action: () => setShowArabic((prev) => !prev) },
+    { key: "i", label: "Toggle Arabic Image", description: "Show/hide ayah image render", action: () => {
+      if (!stateRef.current.hasSeenImageWarning) {
+        setShowImageWarningDialog(true);
+      } else {
+        setShowArabicImage((prev) => !prev);
+      }
+    } },
     { key: "t", label: "Toggle Translation", description: "Show/hide Translation pane", action: () => setShowTranslation((prev) => !prev) },
     { key: "r", label: "Toggle Transliteration", description: "Show/hide Transliteration pane", action: () => setShowTransliteration((prev) => !prev) },
     {
@@ -545,6 +560,14 @@ function AppContent() {
       setShowArabic(prev => !prev);
       return;
     }
+    if (str === 'i') {
+      if (!s.hasSeenImageWarning) {
+        setShowImageWarningDialog(true);
+      } else {
+        setShowArabicImage(prev => !prev);
+      }
+      return;
+    }
     if (str === 't') {
       setShowTranslation(prev => !prev);
       return;
@@ -851,6 +874,7 @@ function AppContent() {
           isSearchMode={isSearchMode}
           searchInput={searchInput}
           showArabic={showArabic}
+          showArabicImage={showArabicImage}
           showTranslation={showTranslation}
           showTransliteration={showTransliteration}
           language={language}
@@ -874,6 +898,14 @@ function AppContent() {
             <text fg={theme.colors.background}>{flashMessage}</text>
           </box>
         )}
+        <ImageWarningDialog
+          visible={showImageWarningDialog}
+          onConfirm={() => {
+            setHasSeenImageWarning(true);
+            setShowImageWarningDialog(false);
+            setShowArabicImage(true);
+          }}
+        />
         <HelpDialog visible={showHelp} />
         <CommandPalette
           visible={showPalette}

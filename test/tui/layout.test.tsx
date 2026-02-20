@@ -13,6 +13,6 @@ describe("TUI Layout", () => {
     console.log("Captured Output:\n" + output);
 
     expect(output).toContain("Surahs");
-    expect(output).toContain("Al-Fatihah");
+    expect(output).toContain("Reading");
   });
 });

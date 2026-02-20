@@ -30,3 +30,6 @@ AGENTS.md
 # Data
 migrations/
 node_modules/
+
+# Dev tooling
+video/
