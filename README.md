@@ -5,6 +5,14 @@
 [![npm](https://img.shields.io/npm/v/quran.sh)](https://www.npmjs.com/package/quran.sh)
 [![License](https://img.shields.io/github/license/smashah/quran.sh)](LICENSE)
 
+<br/>
+<div align="center">
+  <a href="https://github.com/smashah/quran.sh/raw/main/demos/Tutorial.mp4">
+    <img src="https://github.com/smashah/quran.sh/raw/main/demos/demo.gif" width="100%" alt="Quran.sh Demo Video">
+  </a>
+</div>
+<br/>
+
 ## Features
 
 ### 📚 Reading
